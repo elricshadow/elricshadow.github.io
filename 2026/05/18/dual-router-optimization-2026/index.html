@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222"><meta name="generator" content="Hexo 8.1.1">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css" integrity="sha256-VHqXKFhhMxcpubYf9xiWdCiojEbY9NexQ4jh8AxbvcM=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"elric.top","root":"/","images":"/images","scheme":"Gemini","darkmode":false,"version":"8.26.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"post","padding":18,"offset":12},"hljswrap":true,"codeblock":{"theme":{"light":"default","dark":"stackoverflow-dark"},"prism":{"light":"prism","dark":"prism-dark"},"copy_button":{"enable":false,"style":null},"fold":{"enable":false,"height":500},"language":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"duration":200,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"}}</script><script src="/js/config.js" defer></script>
+
+    <meta name="description" content="在复杂的家庭网络环境中，双路由（主路+旁路）协作是许多发烧友的选择。本文将记录一次针对 MikroTik RB5009 与 ImmortalWrt 的深度联合调优过程，涵盖 DNS 闭环构建、加密解析精修以及 Xray 性能压榨。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="2026 双路由联合调优实战：MikroTik RB5009 与 ImmortalWrt 的性能与安全重构">
+<meta property="og:url" content="https://elric.top/2026/05/18/dual-router-optimization-2026/index.html">
+<meta property="og:site_name" content="Elric&#39;s Desk">
+<meta property="og:description" content="在复杂的家庭网络环境中，双路由（主路+旁路）协作是许多发烧友的选择。本文将记录一次针对 MikroTik RB5009 与 ImmortalWrt 的深度联合调优过程，涵盖 DNS 闭环构建、加密解析精修以及 Xray 性能压榨。">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2026-05-18T11:40:00.000Z">
+<meta property="article:modified_time" content="2026-05-18T11:39:39.148Z">
+<meta property="article:author" content="Elric">
+<meta property="article:tag" content="ImmortalWrt">
+<meta property="article:tag" content="MikroTik">
+<meta property="article:tag" content="PassWall">
+<meta property="article:tag" content="RouterOS">
+<meta property="article:tag" content="SmartDNS">
+<meta property="article:tag" content="Xray">
+<meta property="article:tag" content="性能优化">
+<meta name="twitter:card" content="summary">
+
+
+<link rel="canonical" href="https://elric.top/2026/05/18/dual-router-optimization-2026/">
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://elric.top/2026/05/18/dual-router-optimization-2026/","path":"2026/05/18/dual-router-optimization-2026/","title":"2026 双路由联合调优实战：MikroTik RB5009 与 ImmortalWrt 的性能与安全重构"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>2026 双路由联合调优实战：MikroTik RB5009 与 ImmortalWrt 的性能与安全重构 | Elric's Desk</title>
+  
+
+
+
+
+
+
+
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous" defer></script>
+<script src="/js/utils.js" defer></script><script src="/js/motion.js" defer></script><script src="/js/sidebar.js" defer></script><script src="/js/next-boot.js" defer></script>
+
+  
+
+
+
+
+
+
+  
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">Elric's Desk</p>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">雜亂的書桌</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger" aria-label="搜索" role="button">
+    </div>
+  </div>
+</div>
+
+
+
+
+
+
+
+</header>
+        
+  
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%F0%9F%9B%A1%EF%B8%8F-%E4%B8%80%E3%80%81%E4%B8%BB%E8%B7%AF%E7%94%B1-RB5009%EF%BC%9A%E5%9B%BA%E8%8B%A5%E9%87%91%E6%B1%A4"><span class="nav-number">1.</span> <span class="nav-text">🛡️ 一、主路由 RB5009：固若金汤</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-%E5%AE%89%E5%85%A8%E5%8A%A0%E5%9B%BA"><span class="nav-number">1.1.</span> <span class="nav-text">1. 安全加固</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-NAT-%E4%B8%8E%E8%BD%AC%E5%8F%91%E7%B2%BE%E4%BF%AE"><span class="nav-number">1.2.</span> <span class="nav-text">2. NAT 与转发精修</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%F0%9F%9A%80-%E4%BA%8C%E3%80%81%E6%97%81%E8%B7%AF%E7%94%B1-ImmortalWrt%EF%BC%9A%E6%99%BA%E6%85%A7%E4%B8%AD%E6%9E%A2"><span class="nav-number">2.</span> <span class="nav-text">🚀 二、旁路由 ImmortalWrt：智慧中枢</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-DNS-%E9%97%AD%E7%8E%AF%E6%9E%B6%E6%9E%84"><span class="nav-number">2.1.</span> <span class="nav-text">1. DNS 闭环架构</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-Xray-%E6%80%A7%E8%83%BD%E6%9E%81%E8%87%B4%E5%8E%8B%E6%A6%A8"><span class="nav-number">2.2.</span> <span class="nav-text">2. Xray 性能极致压榨</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%F0%9F%92%A1-%E6%80%BB%E7%BB%93"><span class="nav-number">3.</span> <span class="nav-text">💡 总结</span></a></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">Elric</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">5</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+        <span class="site-state-item-count">1</span>
+        <span class="site-state-item-name">分类</span>
+      </div>
+      <div class="site-state-item site-state-tags">
+        <span class="site-state-item-count">22</span>
+        <span class="site-state-item-name">标签</span>
+      </div>
+  </nav>
+</div>
+
+        </div>
+      </div>
+    </div>
+
+    
+  </aside>
+
+
+    </div>
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://elric.top/2026/05/18/dual-router-optimization-2026/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Elric">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Elric's Desk">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="2026 双路由联合调优实战：MikroTik RB5009 与 ImmortalWrt 的性能与安全重构 | Elric's Desk">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          2026 双路由联合调优实战：MikroTik RB5009 与 ImmortalWrt 的性能与安全重构
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+      
+
+      <time title="创建时间：2026-05-18 19:40:00 / 修改时间：19:39:39" itemprop="dateCreated datePublished" datetime="2026-05-18T19:40:00+08:00">2026-05-18</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0/" itemprop="url" rel="index"><span itemprop="name">技术笔记</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody"><p>在复杂的家庭网络环境中，双路由（主路+旁路）协作是许多发烧友的选择。本文将记录一次针对 <strong>MikroTik RB5009</strong> 与 <strong>ImmortalWrt</strong> 的深度联合调优过程，涵盖 DNS 闭环构建、加密解析精修以及 Xray 性能压榨。</p>
+<span id="more"></span>
+
+<h2 id="🛡️-一、主路由-RB5009：固若金汤"><a href="#🛡️-一、主路由-RB5009：固若金汤" class="headerlink" title="🛡️ 一、主路由 RB5009：固若金汤"></a>🛡️ 一、主路由 RB5009：固若金汤</h2><p>作为网络的“守门员”，RB5009 不仅要负责流量的高效转发，更要挡住来自公网的恶意探测。</p>
+<h3 id="1-安全加固"><a href="#1-安全加固" class="headerlink" title="1. 安全加固"></a>1. 安全加固</h3><ul>
+<li><strong>SSH 权限收束</strong>：弃用密码，改用 <code>Ed25519</code> 密钥认证。通过 <code>/ip service</code> 物理锁死 SSH 仅限内网访问。</li>
+<li><strong>DNS 放大攻击防护</strong>：显式拦截来自 WAN 口的 53 端口 (UDP&#x2F;TCP) 请求，防止路由器被外部利用。</li>
+<li><strong>IPv6 彻底封锁</strong>：在 <code>/ipv6 settings</code> 中全局禁用，彻底消除地址泄露和双栈竞争带来的延迟。</li>
+</ul>
+<h3 id="2-NAT-与转发精修"><a href="#2-NAT-与转发精修" class="headerlink" title="2. NAT 与转发精修"></a>2. NAT 与转发精修</h3><ul>
+<li><strong>RustDesk 优化</strong>：将 UDP 转发精简为单 <code>21116</code> 端口，实现更精准的 P2P 打洞。</li>
+<li><strong>Mangle TTL 伪装</strong>：设置 <code>change-ttl=63</code>，隐藏内网拓扑特征。</li>
+</ul>
+<hr>
+<h2 id="🚀-二、旁路由-ImmortalWrt：智慧中枢"><a href="#🚀-二、旁路由-ImmortalWrt：智慧中枢" class="headerlink" title="🚀 二、旁路由 ImmortalWrt：智慧中枢"></a>🚀 二、旁路由 ImmortalWrt：智慧中枢</h2><p>ImmortalWrt 承担了全屋的解析与科学分流任务。</p>
+<h3 id="1-DNS-闭环架构"><a href="#1-DNS-闭环架构" class="headerlink" title="1. DNS 闭环架构"></a>1. DNS 闭环架构</h3><p>我们将传统的递归请求改进为闭环模型：<strong>PassWall 引导 -&gt; SmartDNS 选路 -&gt; DoT 加密</strong>。</p>
+<ul>
+<li><strong>系统层</strong>：<code>resolv.conf</code> 指向 <code>127.0.0.1</code>，确保所有服务（含插件）均享受 SmartDNS 加速。</li>
+<li><strong>SmartDNS 精修</strong>：<ul>
+<li>移除 DoH 协议，精简为纯 <strong>DoT (TLS)</strong>。</li>
+<li><strong>移除 Cloudflare 节点</strong>：解决部分 CF 代理节点因解析到 CDN 优选 IP 而导致的连接中断问题。</li>
+<li>国内使用阿里&#x2F;腾讯，国外专供谷歌 DoT。</li>
+</ul>
+</li>
+</ul>
+<h3 id="2-Xray-性能极致压榨"><a href="#2-Xray-性能极致压榨" class="headerlink" title="2. Xray 性能极致压榨"></a>2. Xray 性能极致压榨</h3><p>针对 <strong>VLESS + TLS + XTLS-Vision</strong> 节点进行了专项参数优化：</p>
+<ul>
+<li><strong>缓冲区加速</strong>：<code>buffer_size</code> 提升至 <code>4096</code>，大带宽下载更平滑。</li>
+<li><strong>嗅探重定向</strong>：开启 <code>sniffing_override_dest</code>，分流准确率达 100%。</li>
+<li><strong>TCP Fast Open (TFO)</strong>：全线节点开启 TFO，实现网页访问“秒开”。</li>
+</ul>
+<hr>
+<h2 id="💡-总结"><a href="#💡-总结" class="headerlink" title="💡 总结"></a>💡 总结</h2><p>通过这次调优，我们建立了一个**“国内飞速、国外清爽、内网安全”**的理想模型。网络不仅是通了，更是变得“聪明”且“纯净”了。</p>
+<hr>
+<p><em>本文由 Elric 的 不太聪明智能助理「小龍蝦 🦞」协助整理与发布。</em></p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/MikroTik/" rel="tag"># MikroTik</a>
+              <a href="/tags/RouterOS/" rel="tag"># RouterOS</a>
+              <a href="/tags/ImmortalWrt/" rel="tag"># ImmortalWrt</a>
+              <a href="/tags/SmartDNS/" rel="tag"># SmartDNS</a>
+              <a href="/tags/PassWall/" rel="tag"># PassWall</a>
+              <a href="/tags/Xray/" rel="tag"># Xray</a>
+              <a href="/tags/%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96/" rel="tag"># 性能优化</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2026/05/11/hp-p1505n-docker-airprint-guide/" rel="prev" title="老旧打印机回春：HP P1505n 的 Docker CUPS 与 AirPrint 完整部署方案">
+                  <i class="fa fa-angle-left"></i> 老旧打印机回春：HP P1505n 的 Docker CUPS 与 AirPrint 完整部署方案
+                </a>
+            </div>
+            <div class="post-nav-item">
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+  <div class="copyright">
+    &copy; 
+    <span itemprop="copyrightYear">2026</span>
+    <span class="with-love">
+      <i class="fa fa-heart"></i>
+    </span>
+    <span class="author" itemprop="copyrightHolder">Elric</span>
+  </div>
+  <div class="powered-by">由 <a href="https://hexo.io/" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+  <div class="sidebar-dimmer"></div>
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up fa-lg"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+</body>
+</html>

@@ -27,7 +27,7 @@
 <meta property="og:description" content="在复杂的家庭网络环境中，双路由（主路+旁路）协作是许多发烧友的选择。本文将记录一次针对 MikroTik RB5009 与 ImmortalWrt 的深度联合调优过程，涵盖 DNS 闭环构建、加密解析精修以及 Xray 性能压榨。">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2026-05-18T11:40:00.000Z">
-<meta property="article:modified_time" content="2026-05-18T11:39:39.148Z">
+<meta property="article:modified_time" content="2026-05-19T03:17:20.947Z">
 <meta property="article:author" content="Elric">
 <meta property="article:tag" content="ImmortalWrt">
 <meta property="article:tag" content="MikroTik">
@@ -128,7 +128,7 @@
       <div class="sidebar-panel-container">
         <!--noindex-->
         <div class="post-toc-wrap sidebar-panel">
-            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%F0%9F%9B%A1%EF%B8%8F-%E4%B8%80%E3%80%81%E4%B8%BB%E8%B7%AF%E7%94%B1-RB5009%EF%BC%9A%E5%9B%BA%E8%8B%A5%E9%87%91%E6%B1%A4"><span class="nav-number">1.</span> <span class="nav-text">🛡️ 一、主路由 RB5009：固若金汤</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-%E5%AE%89%E5%85%A8%E5%8A%A0%E5%9B%BA"><span class="nav-number">1.1.</span> <span class="nav-text">1. 安全加固</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-NAT-%E4%B8%8E%E8%BD%AC%E5%8F%91%E7%B2%BE%E4%BF%AE"><span class="nav-number">1.2.</span> <span class="nav-text">2. NAT 与转发精修</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%F0%9F%9A%80-%E4%BA%8C%E3%80%81%E6%97%81%E8%B7%AF%E7%94%B1-ImmortalWrt%EF%BC%9A%E6%99%BA%E6%85%A7%E4%B8%AD%E6%9E%A2"><span class="nav-number">2.</span> <span class="nav-text">🚀 二、旁路由 ImmortalWrt：智慧中枢</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-DNS-%E9%97%AD%E7%8E%AF%E6%9E%B6%E6%9E%84"><span class="nav-number">2.1.</span> <span class="nav-text">1. DNS 闭环架构</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-Xray-%E6%80%A7%E8%83%BD%E6%9E%81%E8%87%B4%E5%8E%8B%E6%A6%A8"><span class="nav-number">2.2.</span> <span class="nav-text">2. Xray 性能极致压榨</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%F0%9F%92%A1-%E6%80%BB%E7%BB%93"><span class="nav-number">3.</span> <span class="nav-text">💡 总结</span></a></li></ol></div>
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%F0%9F%9B%A1%EF%B8%8F-%E4%B8%80%E3%80%81%E4%B8%BB%E8%B7%AF%E7%94%B1-RB5009%EF%BC%9A%E5%9B%BA%E8%8B%A5%E9%87%91%E6%B1%A4"><span class="nav-number">1.</span> <span class="nav-text">🛡️ 一、主路由 RB5009：固若金汤</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-%E5%AE%89%E5%85%A8%E5%8A%A0%E5%9B%BA"><span class="nav-number">1.1.</span> <span class="nav-text">1. 安全加固</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-NAT-%E4%B8%8E%E8%BD%AC%E5%8F%91%E7%B2%BE%E4%BF%AE"><span class="nav-number">1.2.</span> <span class="nav-text">2. NAT 与转发精修</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%F0%9F%9A%80-%E4%BA%8C%E3%80%81%E6%97%81%E8%B7%AF%E7%94%B1-ImmortalWrt%EF%BC%9A%E6%99%BA%E6%85%A7%E4%B8%AD%E6%9E%A2"><span class="nav-number">2.</span> <span class="nav-text">🚀 二、旁路由 ImmortalWrt：智慧中枢</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-DNS-%E9%97%AD%E7%8E%AF%E6%9E%B6%E6%9E%84"><span class="nav-number">2.1.</span> <span class="nav-text">1. DNS 闭环架构</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-Xray-%E6%80%A7%E8%83%BD%E6%9E%81%E8%87%B4%E5%8E%8B%E6%A6%A8"><span class="nav-number">2.2.</span> <span class="nav-text">2. Xray 性能极致压榨</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%F0%9F%8C%90-%E4%B8%89%E3%80%81%E5%8F%8C%E8%BD%A8-DNS-%E5%8D%8F%E4%BD%9C%E6%A8%A1%E5%9E%8B"><span class="nav-number">3.</span> <span class="nav-text">🌐 三、双轨 DNS 协作模型</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-%E5%9F%BA%E7%A1%80%E8%BD%A8-RB5009-%E6%89%BF%E8%BD%BD"><span class="nav-number">3.1.</span> <span class="nav-text">1. 基础轨 (RB5009 承载)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-%E5%8A%A0%E9%80%9F%E8%BD%A8-ImmortalWrt-%E6%89%BF%E8%BD%BD"><span class="nav-number">3.2.</span> <span class="nav-text">2. 加速轨 (ImmortalWrt 承载)</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%F0%9F%92%A1-%E6%80%BB%E7%BB%93"><span class="nav-number">4.</span> <span class="nav-text">💡 总结</span></a></li></ol></div>
         </div>
         <!--/noindex-->
 
@@ -205,9 +205,15 @@
         <i class="far fa-calendar"></i>
       </span>
       <span class="post-meta-item-text">发表于</span>
-      
 
-      <time title="创建时间：2026-05-18 19:40:00 / 修改时间：19:39:39" itemprop="dateCreated datePublished" datetime="2026-05-18T19:40:00+08:00">2026-05-18</time>
+      <time title="创建时间：2026-05-18 19:40:00" itemprop="dateCreated datePublished" datetime="2026-05-18T19:40:00+08:00">2026-05-18</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
+      </span>
+      <span class="post-meta-item-text">更新于</span>
+      <time title="修改时间：2026-05-19 11:17:20" itemprop="dateModified" datetime="2026-05-19T11:17:20+08:00">2026-05-19</time>
     </span>
     <span class="post-meta-item">
       <span class="post-meta-item-icon">
@@ -258,6 +264,18 @@
 <li><strong>缓冲区加速</strong>：<code>buffer_size</code> 提升至 <code>4096</code>，大带宽下载更平滑。</li>
 <li><strong>嗅探重定向</strong>：开启 <code>sniffing_override_dest</code>，分流准确率达 100%。</li>
 <li><strong>TCP Fast Open (TFO)</strong>：全线节点开启 TFO，实现网页访问“秒开”。</li>
+</ul>
+<hr>
+<h2 id="🌐-三、双轨-DNS-协作模型"><a href="#🌐-三、双轨-DNS-协作模型" class="headerlink" title="🌐 三、双轨 DNS 协作模型"></a>🌐 三、双轨 DNS 协作模型</h2><p>为了兼顾全家设备的稳定与特定设备的高级需求，我们构建了一套“双轨并行”的 DNS 架构：</p>
+<h3 id="1-基础轨-RB5009-承载"><a href="#1-基础轨-RB5009-承载" class="headerlink" title="1. 基础轨 (RB5009 承载)"></a>1. 基础轨 (RB5009 承载)</h3><ul>
+<li><strong>适用设备</strong>：通过 DHCP 自动获取配置的所有普通设备（IoT、电视等）。</li>
+<li><strong>解析逻辑</strong>：请求 -&gt; RB5009 -&gt; <strong>AliDNS DoH (加密)</strong>。</li>
+<li><strong>优势</strong>：极高稳定性。即便旁路由重启或虚拟机故障，基础上网完全不受影响，且解析记录对 ISP 隐身。</li>
+</ul>
+<h3 id="2-加速轨-ImmortalWrt-承载"><a href="#2-加速轨-ImmortalWrt-承载" class="headerlink" title="2. 加速轨 (ImmortalWrt 承载)"></a>2. 加速轨 (ImmortalWrt 承载)</h3><ul>
+<li><strong>适用设备</strong>：手动配置网关&#x2F;DNS 为 <code>192.168.0.2</code> 的核心设备（PC、Apple TV 等）。</li>
+<li><strong>解析逻辑</strong>：请求 -&gt; SmartDNS -&gt; <strong>DoT (阿里&#x2F;谷歌)</strong> -&gt; 分流。</li>
+<li><strong>优势</strong>：极致的解析速度与防污染能力，完美配合 PassWall 进行全球流量调度。</li>
 </ul>
 <hr>
 <h2 id="💡-总结"><a href="#💡-总结" class="headerlink" title="💡 总结"></a>💡 总结</h2><p>通过这次调优，我们建立了一个**“国内飞速、国外清爽、内网安全”**的理想模型。网络不仅是通了，更是变得“聪明”且“纯净”了。</p>

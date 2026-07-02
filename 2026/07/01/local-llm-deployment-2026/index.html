@@ -19,22 +19,31 @@
 
 <script class="next-config" data-name="main" type="application/json">{"hostname":"yourdomain.com","root":"/","images":"/images","scheme":"Gemini","darkmode":false,"version":"8.26.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"post","padding":18,"offset":12},"hljswrap":true,"codeblock":{"theme":{"light":"default","dark":"stackoverflow-dark"},"prism":{"light":"prism","dark":"prism-dark"},"copy_button":{"enable":false,"style":null},"fold":{"enable":false,"height":500},"language":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"duration":200,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"}}</script><script src="/js/config.js" defer></script>
 
-    <meta property="og:type" content="website">
-<meta property="og:title" content="Elric&#39;s Desk">
-<meta property="og:url" content="https://yourdomain.com/index.html">
+    <meta name="description" content="在 AI 大模型的时代，”数据隐私”和”响应速度”越来越成为关注点。与其把敏感信息发送到云端 API，不如在自家局域网里跑一个本地模型。 本文记录我在 ai-server 上部署 Qwen 3.6 27B 的全过程 —— 从硬件选型、ROCm 环境搭建、llama.cpp 编译，到 systemd 守护和性能调优。希望给同样想在消费级 AMD 显卡上跑大模型的朋友一些参考。 🛠 一、硬件清单">
+<meta property="og:type" content="article">
+<meta property="og:title" content="本地部署大模型：RX 7900 XTX + llama.cpp 全记录">
+<meta property="og:url" content="https://yourdomain.com/2026/07/01/local-llm-deployment-2026/index.html">
 <meta property="og:site_name" content="Elric&#39;s Desk">
+<meta property="og:description" content="在 AI 大模型的时代，”数据隐私”和”响应速度”越来越成为关注点。与其把敏感信息发送到云端 API，不如在自家局域网里跑一个本地模型。 本文记录我在 ai-server 上部署 Qwen 3.6 27B 的全过程 —— 从硬件选型、ROCm 环境搭建、llama.cpp 编译，到 systemd 守护和性能调优。希望给同样想在消费级 AMD 显卡上跑大模型的朋友一些参考。 🛠 一、硬件清单">
 <meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2026-07-01T16:00:00.000Z">
+<meta property="article:modified_time" content="2026-07-02T11:34:23.085Z">
 <meta property="article:author" content="Elric">
+<meta property="article:tag" content="AMD">
+<meta property="article:tag" content="ROCm">
+<meta property="article:tag" content="llama.cpp">
+<meta property="article:tag" content="大模型">
+<meta property="article:tag" content="自部署">
 <meta name="twitter:card" content="summary">
 
 
-<link rel="canonical" href="https://yourdomain.com/">
+<link rel="canonical" href="https://yourdomain.com/2026/07/01/local-llm-deployment-2026/">
 
 
-<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":true,"isPost":false,"lang":"zh-CN","comments":"","permalink":"","path":"index.html","title":""}</script>
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://yourdomain.com/2026/07/01/local-llm-deployment-2026/","path":"2026/07/01/local-llm-deployment-2026/","title":"本地部署大模型：RX 7900 XTX + llama.cpp 全记录"}</script>
 
 <script class="next-config" data-name="calendar" type="application/json">""</script>
-<title>Elric's Desk</title>
+<title>本地部署大模型：RX 7900 XTX + llama.cpp 全记录 | Elric's Desk</title>
   
 
 
@@ -81,7 +90,7 @@
 
     <a href="/" class="brand" rel="start">
       <i class="logo-line"></i>
-      <h1 class="site-title">Elric's Desk</h1>
+      <p class="site-title">Elric's Desk</p>
       <i class="logo-line"></i>
     </a>
       <p class="site-subtitle" itemprop="description">雜亂的書桌</p>
@@ -104,7 +113,7 @@
   
   <aside class="sidebar">
 
-    <div class="sidebar-inner sidebar-overview-active">
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
       <ul class="sidebar-nav">
         <li class="sidebar-nav-toc">
           文章目录
@@ -117,6 +126,7 @@
       <div class="sidebar-panel-container">
         <!--noindex-->
         <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%F0%9F%9B%A0-%E4%B8%80%E3%80%81%E7%A1%AC%E4%BB%B6%E6%B8%85%E5%8D%95"><span class="nav-number">1.</span> <span class="nav-text">🛠 一、硬件清单</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%BA%E4%BB%80%E4%B9%88%E9%80%89-AMD-%E6%98%BE%E5%8D%A1%EF%BC%9F"><span class="nav-number">1.1.</span> <span class="nav-text">为什么选 AMD 显卡？</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%F0%9F%90%B3-%E4%BA%8C%E3%80%81ROCm-%E7%8E%AF%E5%A2%83%E6%90%AD%E5%BB%BA"><span class="nav-number">2.</span> <span class="nav-text">🐳 二、ROCm 环境搭建</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%AE%89%E8%A3%85%E6%AD%A5%E9%AA%A4"><span class="nav-number">2.1.</span> <span class="nav-text">安装步骤</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%AE%89%E8%A3%85%E8%BF%87%E7%A8%8B%E4%B8%AD%E7%9A%84%E6%B3%A8%E6%84%8F%E7%82%B9"><span class="nav-number">2.2.</span> <span class="nav-text">安装过程中的注意点</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%F0%9F%94%A8-%E4%B8%89%E3%80%81%E7%BC%96%E8%AF%91-llama-cpp"><span class="nav-number">3.</span> <span class="nav-text">🔨 三、编译 llama.cpp</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%BA%90%E7%A0%81%E5%85%8B%E9%9A%86%E4%B8%8E%E6%9E%84%E5%BB%BA"><span class="nav-number">3.1.</span> <span class="nav-text">源码克隆与构建</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%85%B3%E9%94%AE%E6%9E%84%E5%BB%BA%E5%8F%82%E6%95%B0%E8%AF%B4%E6%98%8E"><span class="nav-number">3.2.</span> <span class="nav-text">关键构建参数说明</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%9E%84%E5%BB%BA%E7%BB%93%E6%9E%9C%E7%A1%AE%E8%AE%A4"><span class="nav-number">3.3.</span> <span class="nav-text">构建结果确认</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%F0%9F%93%A6-%E5%9B%9B%E3%80%81%E6%A8%A1%E5%9E%8B%E9%80%89%E6%8B%A9"><span class="nav-number">4.</span> <span class="nav-text">📦 四、模型选择</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%BA%E4%BB%80%E4%B9%88%E6%98%AF-abliterated-%E7%89%88%E6%9C%AC%EF%BC%9F"><span class="nav-number">4.1.</span> <span class="nav-text">为什么是 abliterated 版本？</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%BA%E4%BB%80%E4%B9%88%E9%80%89-Qwen-3-6-27B%EF%BC%9F"><span class="nav-number">4.2.</span> <span class="nav-text">为什么选 Qwen 3.6 27B？</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E2%9A%99%EF%B8%8F-%E4%BA%94%E3%80%81systemd-%E5%AE%88%E6%8A%A4%E8%BF%9B%E7%A8%8B"><span class="nav-number">5.</span> <span class="nav-text">⚙️ 五、systemd 守护进程</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%9C%8D%E5%8A%A1%E6%96%87%E4%BB%B6"><span class="nav-number">5.1.</span> <span class="nav-text">服务文件</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%90%AF%E5%8A%A8%E5%8F%82%E6%95%B0%E8%AF%A6%E8%A7%A3"><span class="nav-number">5.2.</span> <span class="nav-text">启动参数详解</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#KV-cache-%E9%87%8F%E5%8C%96%E9%80%89%E6%8B%A9"><span class="nav-number">5.3.</span> <span class="nav-text">KV cache 量化选择</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%F0%9F%93%8A-%E5%85%AD%E3%80%81%E6%80%A7%E8%83%BD%E5%AE%9E%E6%B5%8B"><span class="nav-number">6.</span> <span class="nav-text">📊 六、性能实测</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%94%9F%E6%88%90%E9%80%9F%E5%BA%A6%EF%BC%88Decoding%EF%BC%89"><span class="nav-number">6.1.</span> <span class="nav-text">生成速度（Decoding）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Prompt-%E5%A4%84%E7%90%86%E9%80%9F%E5%BA%A6%EF%BC%88Prefill%EF%BC%89"><span class="nav-number">6.2.</span> <span class="nav-text">Prompt 处理速度（Prefill）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%B3%BB%E7%BB%9F%E8%B5%84%E6%BA%90"><span class="nav-number">6.3.</span> <span class="nav-text">系统资源</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%F0%9F%92%A1-%E4%B8%83%E3%80%81%E8%B0%83%E4%BC%98%E5%BF%83%E5%BE%97"><span class="nav-number">7.</span> <span class="nav-text">💡 七、调优心得</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-KV-cache-%E9%87%8F%E5%8C%96%E6%98%AF%E6%80%A7%E8%83%BD%E5%85%B3%E9%94%AE"><span class="nav-number">7.1.</span> <span class="nav-text">1. KV cache 量化是性能关键</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-PCIe-3-0-%E6%98%AF%E9%9A%90%E5%BD%A2%E7%9A%84%E7%93%B6%E9%A2%88"><span class="nav-number">7.2.</span> <span class="nav-text">2. PCIe 3.0 是隐形的瓶颈</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-%E6%89%B9%E6%AC%A1%E5%8F%82%E6%95%B0%E5%BD%B1%E5%93%8D%E5%BE%88%E5%A4%A7"><span class="nav-number">7.3.</span> <span class="nav-text">3. 批次参数影响很大</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-16GB-%E5%86%85%E5%AD%98%E5%81%8F%E7%B4%A7"><span class="nav-number">7.4.</span> <span class="nav-text">4. 16GB 内存偏紧</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%F0%9F%94%97-%E5%85%AB%E3%80%81%E6%8E%A5%E5%85%A5-Hermes-Agent"><span class="nav-number">8.</span> <span class="nav-text">🔗 八、接入 Hermes Agent</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%F0%9F%93%9D-%E4%B9%9D%E3%80%81%E6%80%BB%E7%BB%93"><span class="nav-number">9.</span> <span class="nav-text">📝 九、总结</span></a></li></ol></div>
         </div>
         <!--/noindex-->
 
@@ -154,16 +164,17 @@
 
     </div>
 
-    <div class="main-inner index posts-expand">
+    <div class="main-inner post posts-expand">
 
-    
+
+  
 
 
 <div class="post-block">
   
   
 
-  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="">
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
     <link itemprop="mainEntityOfPage" href="https://yourdomain.com/2026/07/01/local-llm-deployment-2026/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -177,13 +188,13 @@
     </span>
 
     <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
-      <meta itemprop="name" content=" | Elric's Desk">
+      <meta itemprop="name" content="本地部署大模型：RX 7900 XTX + llama.cpp 全记录 | Elric's Desk">
       <meta itemprop="description" content="">
     </span>
       <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          <a href="/2026/07/01/local-llm-deployment-2026/" class="post-title-link" itemprop="url">本地部署大模型：RX 7900 XTX + llama.cpp 全记录</a>
-        </h2>
+        <h1 class="post-title" itemprop="name headline">
+          本地部署大模型：RX 7900 XTX + llama.cpp 全记录
+        </h1>
 
         <div class="post-meta-container">
           <div class="post-meta">
@@ -215,8 +226,7 @@
     
     
     
-    <div class="post-body" itemprop="articleBody">
-          <p>在 AI 大模型的时代，”数据隐私”和”响应速度”越来越成为关注点。与其把敏感信息发送到云端 API，不如在自家局域网里跑一个本地模型。</p>
+    <div class="post-body" itemprop="articleBody"><p>在 AI 大模型的时代，”数据隐私”和”响应速度”越来越成为关注点。与其把敏感信息发送到云端 API，不如在自家局域网里跑一个本地模型。</p>
 <p>本文记录我在 ai-server 上部署 Qwen 3.6 27B 的全过程 —— 从硬件选型、ROCm 环境搭建、llama.cpp 编译，到 systemd 守护和性能调优。希望给同样想在消费级 AMD 显卡上跑大模型的朋友一些参考。</p>
 <h2 id="🛠-一、硬件清单"><a href="#🛠-一、硬件清单" class="headerlink" title="🛠 一、硬件清单"></a>🛠 一、硬件清单</h2><table>
 <thead>
@@ -512,7 +522,6 @@
 <hr>
 <p><em>本文中的性能数据来自 2026 年 6 月 30 日部署完成后的实际运行日志，测试环境为局域网内部。llama.cpp 版本为 commit 3fc4e1052。</em></p>
 
-      
     </div>
 
     
@@ -520,691 +529,29 @@
     
 
     <footer class="post-footer">
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-</div>
+          <div class="post-tags">
+              <a href="/tags/%E5%A4%A7%E6%A8%A1%E5%9E%8B/" rel="tag"># 大模型</a>
+              <a href="/tags/llama-cpp/" rel="tag"># llama.cpp</a>
+              <a href="/tags/ROCm/" rel="tag"># ROCm</a>
+              <a href="/tags/AMD/" rel="tag"># AMD</a>
+              <a href="/tags/%E8%87%AA%E9%83%A8%E7%BD%B2/" rel="tag"># 自部署</a>
+          </div>
 
-
-
-
-    
-
-
-<div class="post-block">
-  
-  
-
-  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="">
-    <link itemprop="mainEntityOfPage" href="https://yourdomain.com/2026/05/23/matrix-e2ee-encryption-guide/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="Elric">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Elric's Desk">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
-      <meta itemprop="name" content=" | Elric's Desk">
-      <meta itemprop="description" content="">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          <a href="/2026/05/23/matrix-e2ee-encryption-guide/" class="post-title-link" itemprop="url">Matrix 开启端到端加密 (E2EE) 实战教程：通讯冗余与安全加固</a>
-        </h2>
-
-        <div class="post-meta-container">
-          <div class="post-meta">
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-calendar"></i>
-      </span>
-      <span class="post-meta-item-text">发表于</span>
-
-      <time title="创建时间：2026-05-23 14:00:00" itemprop="dateCreated datePublished" datetime="2026-05-23T14:00:00+08:00">2026-05-23</time>
-    </span>
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-calendar-check"></i>
-      </span>
-      <span class="post-meta-item-text">更新于</span>
-      <time title="修改时间：2026-07-02 19:34:23" itemprop="dateModified" datetime="2026-07-02T19:34:23+08:00">2026-07-02</time>
-    </span>
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-folder"></i>
-      </span>
-      <span class="post-meta-item-text">分类于</span>
-        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-          <a href="/categories/%E6%8A%80%E6%9C%AF%E5%AE%9E%E6%88%98/" itemprop="url" rel="index"><span itemprop="name">技术实战</span></a>
-        </span>
-    </span>
-
-  
-</div>
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-          <h2 id="背景：为什么在有了-Telegram-后还需要-Matrix？"><a href="#背景：为什么在有了-Telegram-后还需要-Matrix？" class="headerlink" title="背景：为什么在有了 Telegram 后还需要 Matrix？"></a>背景：为什么在有了 Telegram 后还需要 Matrix？</h2><p>在使用 AI 助理（OpenClaw）的过程中，我最初主要依赖 Telegram 进行交互。但由于网络波动和节点稳定性问题，Telegram 偶尔会出现指令断连或响应延迟。为了建立更稳健的通讯冗余，我部署了私有化的 Matrix (Synapse) 服务。</p>
-<p>为了确保与 AI 助理对话的绝对私密性，开启 <strong>端到端加密 (E2EE)</strong> 是必不可少的一步。以下是基于 OpenClaw 与 Synapse 的实战配置流程。</p>
-<h2 id="1-Matrix-的核心优势"><a href="#1-Matrix-的核心优势" class="headerlink" title="1. Matrix 的核心优势"></a>1. Matrix 的核心优势</h2><ul>
-<li><strong>自托管控制</strong>：所有聊天记录存储在自己的服务器上。</li>
-<li><strong>高可用性</strong>：作为 Telegram 的互补通道，即使公网代理波动，通过隧道加密的 Matrix 依然能保持高可用。</li>
-<li><strong>安全性</strong>：原生支持端到端加密，确保只有发送者和接收者（你和 AI）能解密消息。</li>
-</ul>
-<h2 id="2-开启步骤"><a href="#2-开启步骤" class="headerlink" title="2. 开启步骤"></a>2. 开启步骤</h2><h3 id="2-1-修改-OpenClaw-配置"><a href="#2-1-修改-OpenClaw-配置" class="headerlink" title="2.1 修改 OpenClaw 配置"></a>2.1 修改 OpenClaw 配置</h3><p>在 OpenClaw 的 <code>openclaw.json</code> 配置文件中，找到 <code>channels.matrix</code> 部分，添加 <code>&quot;encryption&quot;: true</code> 配置项。</p>
-<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="punctuation">&#123;</span></span><br><span class="line">  <span class="attr">&quot;channels&quot;</span><span class="punctuation">:</span> <span class="punctuation">&#123;</span></span><br><span class="line">    <span class="attr">&quot;matrix&quot;</span><span class="punctuation">:</span> <span class="punctuation">&#123;</span></span><br><span class="line">      <span class="attr">&quot;enabled&quot;</span><span class="punctuation">:</span> <span class="literal"><span class="keyword">true</span></span><span class="punctuation">,</span></span><br><span class="line">      <span class="attr">&quot;provider&quot;</span><span class="punctuation">:</span> <span class="string">&quot;matrix&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="attr">&quot;homeserverUrl&quot;</span><span class="punctuation">:</span> <span class="string">&quot;https://matrix.yourdomain.com&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="attr">&quot;accessToken&quot;</span><span class="punctuation">:</span> <span class="string">&quot;your_access_token&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="attr">&quot;encryption&quot;</span><span class="punctuation">:</span> <span class="literal"><span class="keyword">true</span></span>  <span class="comment">// 关键配置：开启加密</span></span><br><span class="line">    <span class="punctuation">&#125;</span></span><br><span class="line">  <span class="punctuation">&#125;</span></span><br><span class="line"><span class="punctuation">&#125;</span></span><br></pre></td></tr></table></figure>
-
-<h3 id="2-2-应用配置与重启"><a href="#2-2-应用配置与重启" class="headerlink" title="2.2 应用配置与重启"></a>2.2 应用配置与重启</h3><p>修改完成后，需要重启 OpenClaw 以加载新的加密模块。</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 执行热重启 (SIGUSR1)</span></span><br><span class="line">openclaw gateway restart</span><br></pre></td></tr></table></figure>
-
-<h2 id="3-关键：设备验证-Manual-Verification"><a href="#3-关键：设备验证-Manual-Verification" class="headerlink" title="3. 关键：设备验证 (Manual Verification)"></a>3. 关键：设备验证 (Manual Verification)</h2><p>开启加密后，你的 Matrix 客户端（如 Element）会提示「未经验证的设备」。这是 E2EE 的核心机制——你需要手动信任 AI 助理这个「新设备」。</p>
-<ul>
-<li><strong>操作提示</strong>：在 Element 中打开与助理的私聊窗口，点击助理的头像进入个人信息，选择「验证 (Verify)」。</li>
-<li><strong>完成握手</strong>：按照提示完成对比图表或确认，一旦显示绿色小盾牌，即表示加密链路正式建立。</li>
-</ul>
-<h2 id="4-推荐客户端-Multi-platform-Clients"><a href="#4-推荐客户端-Multi-platform-Clients" class="headerlink" title="4. 推荐客户端 (Multi-platform Clients)"></a>4. 推荐客户端 (Multi-platform Clients)</h2><p>为了获得最佳的 E2EE 体验，建议选择对加密支持完善的客户端：</p>
-<ol>
-<li><p><strong>Element X (iOS &#x2F; Android)</strong> —— <strong>强烈推荐</strong></p>
-<ul>
-<li>官方最新旗舰版，底层使用 Rust 重新编写。响应极快，UI 更加现代化。针对 E2EE 进行了大幅优化，验证流程更顺滑。</li>
-</ul>
-</li>
-<li><p><strong>Cinny (Web &#x2F; Desktop)</strong></p>
-<ul>
-<li>极简主义风格，非常轻量。如果你喜欢类似 Slack 或 Discord 的多频道布局，Cinny 是最佳选择。</li>
-</ul>
-</li>
-<li><p><strong>SchildiChat (Android &#x2F; Desktop)</strong></p>
-<ul>
-<li>基于 Element 修改的社区版，结合了 Element 的功能和更传统的即时通讯布局（如气泡对话框）。</li>
-</ul>
-</li>
-<li><p><strong>FluffyChat (Linux &#x2F; Android &#x2F; iOS &#x2F; Web)</strong></p>
-<ul>
-<li>界面非常可爱、清新，操作门槛极低，跨平台一致性好。</li>
-</ul>
-</li>
-</ol>
-<h2 id="5-常见问题：联邦路由"><a href="#5-常见问题：联邦路由" class="headerlink" title="5. 常见问题：联邦路由"></a>5. 常见问题：联邦路由</h2><p>如果你的助理需要跨服务器通讯（联邦），请确保通过 Cloudflare Tunnel 或反代正确暴露了 <code>/.well-known/matrix/server</code> 接口，否则加密握手包可能会在联邦链路上解析失败。</p>
-<hr>
-<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>通过 Matrix + E2EE 的组合，不仅解决了 Telegram 在特殊网络环境下的连通性痛点，还实现了金融级的对话隐私保护。现在，我可以放心地在任何网络环境下调教我的助理了。</p>
-<hr>
-<p><em>本文由 Elric 的 不太聪明智能助理「小龍蝦 🦞」协助整理与发布。</em></p>
-
-      
-    </div>
-
-    
-    
-    
-
-    <footer class="post-footer">
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-</div>
-
-
-
-
-    
-
-
-<div class="post-block">
-  
-  
-
-  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="">
-    <link itemprop="mainEntityOfPage" href="https://yourdomain.com/2026/05/22/matrix-synapse-cloudflare-tunnel/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="Elric">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Elric's Desk">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
-      <meta itemprop="name" content=" | Elric's Desk">
-      <meta itemprop="description" content="">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          <a href="/2026/05/22/matrix-synapse-cloudflare-tunnel/" class="post-title-link" itemprop="url">内网环境下 Matrix Synapse 与 Cloudflare Tunnel 的完美合体</a>
-        </h2>
-
-        <div class="post-meta-container">
-          <div class="post-meta">
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-calendar"></i>
-      </span>
-      <span class="post-meta-item-text">发表于</span>
-
-      <time title="创建时间：2026-05-22 10:35:00" itemprop="dateCreated datePublished" datetime="2026-05-22T10:35:00+08:00">2026-05-22</time>
-    </span>
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-calendar-check"></i>
-      </span>
-      <span class="post-meta-item-text">更新于</span>
-      <time title="修改时间：2026-07-02 19:34:23" itemprop="dateModified" datetime="2026-07-02T19:34:23+08:00">2026-07-02</time>
-    </span>
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-folder"></i>
-      </span>
-      <span class="post-meta-item-text">分类于</span>
-        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-          <a href="/categories/%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0/" itemprop="url" rel="index"><span itemprop="name">技术笔记</span></a>
-        </span>
-    </span>
-
-  
-</div>
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-          <p>在家庭宽带环境下部署 Matrix Synapse，最头疼的莫过于<strong>公网 IP 暴露</strong>和<strong>联邦通讯（Federation）不通</strong>。通过 RB5009 开启端口转发不仅不安全，还容易被运营商“喝茶”。</p>
-<p>今天记录一套基于 <strong>Cloudflare Tunnel + Worker</strong> 的全隔离部署方案，实现真正的“隐身”运行。</p>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2026/05/22/matrix-synapse-cloudflare-tunnel/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
         
-      
-    </div>
 
-    
-    
-    
-
-    <footer class="post-footer">
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-</div>
-
-
-
-
-    
-
-
-<div class="post-block">
-  
-  
-
-  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="">
-    <link itemprop="mainEntityOfPage" href="https://yourdomain.com/2026/05/18/dual-router-optimization-2026/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="Elric">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Elric's Desk">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
-      <meta itemprop="name" content=" | Elric's Desk">
-      <meta itemprop="description" content="">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          <a href="/2026/05/18/dual-router-optimization-2026/" class="post-title-link" itemprop="url">2026 双路由联合调优实战：MikroTik RB5009 与 ImmortalWrt 的性能与安全重构</a>
-        </h2>
-
-        <div class="post-meta-container">
-          <div class="post-meta">
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-calendar"></i>
-      </span>
-      <span class="post-meta-item-text">发表于</span>
-
-      <time title="创建时间：2026-05-18 19:40:00" itemprop="dateCreated datePublished" datetime="2026-05-18T19:40:00+08:00">2026-05-18</time>
-    </span>
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-calendar-check"></i>
-      </span>
-      <span class="post-meta-item-text">更新于</span>
-      <time title="修改时间：2026-07-02 19:34:23" itemprop="dateModified" datetime="2026-07-02T19:34:23+08:00">2026-07-02</time>
-    </span>
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-folder"></i>
-      </span>
-      <span class="post-meta-item-text">分类于</span>
-        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-          <a href="/categories/%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0/" itemprop="url" rel="index"><span itemprop="name">技术笔记</span></a>
-        </span>
-    </span>
-
-  
-</div>
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-          <p>在复杂的家庭网络环境中，双路由（主路+旁路）协作是许多发烧友的选择。本文将记录一次针对 <strong>MikroTik RB5009</strong> 与 <strong>ImmortalWrt</strong> 的深度联合调优过程，涵盖 DNS 闭环构建、加密解析精修以及 Xray 性能压榨。</p>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2026/05/18/dual-router-optimization-2026/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2026/05/23/matrix-e2ee-encryption-guide/" rel="prev" title="Matrix 开启端到端加密 (E2EE) 实战教程：通讯冗余与安全加固">
+                  <i class="fa fa-angle-left"></i> Matrix 开启端到端加密 (E2EE) 实战教程：通讯冗余与安全加固
+                </a>
             </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-
-    <footer class="post-footer">
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-</div>
-
-
-
-
-    
-
-
-<div class="post-block">
-  
-  
-
-  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="">
-    <link itemprop="mainEntityOfPage" href="https://yourdomain.com/2026/05/11/hp-p1505n-docker-airprint-guide/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="Elric">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Elric's Desk">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
-      <meta itemprop="name" content=" | Elric's Desk">
-      <meta itemprop="description" content="">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          <a href="/2026/05/11/hp-p1505n-docker-airprint-guide/" class="post-title-link" itemprop="url">老旧打印机回春：HP P1505n 的 Docker CUPS 与 AirPrint 完整部署方案</a>
-        </h2>
-
-        <div class="post-meta-container">
-          <div class="post-meta">
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-calendar"></i>
-      </span>
-      <span class="post-meta-item-text">发表于</span>
-
-      <time title="创建时间：2026-05-11 23:10:00" itemprop="dateCreated datePublished" datetime="2026-05-11T23:10:00+08:00">2026-05-11</time>
-    </span>
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-calendar-check"></i>
-      </span>
-      <span class="post-meta-item-text">更新于</span>
-      <time title="修改时间：2026-07-02 19:34:23" itemprop="dateModified" datetime="2026-07-02T19:34:23+08:00">2026-07-02</time>
-    </span>
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-folder"></i>
-      </span>
-      <span class="post-meta-item-text">分类于</span>
-        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-          <a href="/categories/%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0/" itemprop="url" rel="index"><span itemprop="name">技术笔记</span></a>
-        </span>
-    </span>
-
-  
-</div>
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-          <p>HP LaserJet P1505n 是一款基于 Host-based 协议的经典打印机。本文将分享一套通过 Docker 容器化技术，为该打印机提供完美 AirPrint 支持的方案。</p>
-<p>本方案解决了 iOS 预览显示、Web 管理权限、多余打印机名称以及物理关机后自动显示离线等核心问题。</p>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2026/05/11/hp-p1505n-docker-airprint-guide/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
+            <div class="post-nav-item">
             </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-
-    <footer class="post-footer">
-        <div class="post-eof"></div>
-      
+          </div>
     </footer>
   </article>
 </div>
 
-
-
-
-    
-
-
-<div class="post-block">
-  
-  
-
-  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="">
-    <link itemprop="mainEntityOfPage" href="https://yourdomain.com/2026/05/10/mikrotik-rb5009-rustdesk-guide/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="Elric">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Elric's Desk">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
-      <meta itemprop="name" content=" | Elric's Desk">
-      <meta itemprop="description" content="">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          <a href="/2026/05/10/mikrotik-rb5009-rustdesk-guide/" class="post-title-link" itemprop="url">从虚拟机到实体旗舰：MikroTik RB5009 全量配置与 RustDesk 深度优化指南</a>
-        </h2>
-
-        <div class="post-meta-container">
-          <div class="post-meta">
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-calendar"></i>
-      </span>
-      <span class="post-meta-item-text">发表于</span>
-
-      <time title="创建时间：2026-05-10 23:10:00" itemprop="dateCreated datePublished" datetime="2026-05-10T23:10:00+08:00">2026-05-10</time>
-    </span>
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-calendar-check"></i>
-      </span>
-      <span class="post-meta-item-text">更新于</span>
-      <time title="修改时间：2026-07-02 19:34:23" itemprop="dateModified" datetime="2026-07-02T19:34:23+08:00">2026-07-02</time>
-    </span>
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-folder"></i>
-      </span>
-      <span class="post-meta-item-text">分类于</span>
-        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-          <a href="/categories/%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0/" itemprop="url" rel="index"><span itemprop="name">技术笔记</span></a>
-        </span>
-    </span>
-
-  
-</div>
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-          <p>在长期将 RouterOS 运行在 ESXi 8.0 虚拟机后，笔者最近终于入手了实体“神机”—— <strong>MikroTik RB5009UG+S+</strong>。实体硬件带来的 L3 硬件加速（HW Offloading）与 10G SFP+ 扩展性是虚拟环境无法比拟的。本文将从迁移背景、基础拨号、进阶分流到 RustDesk 深度优化，全面记录这台设备的配置精华。</p>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2026/05/10/mikrotik-rb5009-rustdesk-guide/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-
-    <footer class="post-footer">
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-</div>
-
-
-
-
-    
-
-
-<div class="post-block">
-  
-  
-
-  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="">
-    <link itemprop="mainEntityOfPage" href="https://yourdomain.com/2026/05/09/hexo-workflow-tutorial/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="Elric">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Elric's Desk">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
-      <meta itemprop="name" content=" | Elric's Desk">
-      <meta itemprop="description" content="">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          <a href="/2026/05/09/hexo-workflow-tutorial/" class="post-title-link" itemprop="url">终极自动化 Hexo 工作流：GitHub Actions + Vercel 部署全攻略</a>
-        </h2>
-
-        <div class="post-meta-container">
-          <div class="post-meta">
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-calendar"></i>
-      </span>
-      <span class="post-meta-item-text">发表于</span>
-
-      <time title="创建时间：2026-05-09 17:20:00" itemprop="dateCreated datePublished" datetime="2026-05-09T17:20:00+08:00">2026-05-09</time>
-    </span>
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-calendar-check"></i>
-      </span>
-      <span class="post-meta-item-text">更新于</span>
-      <time title="修改时间：2026-07-02 19:34:23" itemprop="dateModified" datetime="2026-07-02T19:34:23+08:00">2026-07-02</time>
-    </span>
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-folder"></i>
-      </span>
-      <span class="post-meta-item-text">分类于</span>
-        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-          <a href="/categories/%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0/" itemprop="url" rel="index"><span itemprop="name">技术笔记</span></a>
-        </span>
-    </span>
-
-  
-</div>
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-          <p>在建立个人博客时，如何实现“写完即发布”的无感体验？本文将详细介绍一套专业的静态网站架构：通过 <strong>GitHub 私有仓库</strong> 存放源代码，利用 <strong>GitHub Actions</strong> 自动构建，并最终经由 <strong>Vercel</strong> 全球加速分发。</p>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2026/05/09/hexo-workflow-tutorial/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-
-    <footer class="post-footer">
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-</div>
-
-
-
-
-    
-
-
-<div class="post-block">
-  
-  
-
-  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="">
-    <link itemprop="mainEntityOfPage" href="https://yourdomain.com/2025/12/21/hello-world/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="Elric">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Elric's Desk">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
-      <meta itemprop="name" content=" | Elric's Desk">
-      <meta itemprop="description" content="">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          <a href="/2025/12/21/hello-world/" class="post-title-link" itemprop="url">Hello World</a>
-        </h2>
-
-        <div class="post-meta-container">
-          <div class="post-meta">
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-calendar"></i>
-      </span>
-      <span class="post-meta-item-text">发表于</span>
-
-      <time title="创建时间：2025-12-22 00:00:00" itemprop="dateCreated datePublished" datetime="2025-12-22T00:00:00+08:00">2025-12-22</time>
-    </span>
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-calendar-check"></i>
-      </span>
-      <span class="post-meta-item-text">更新于</span>
-      <time title="修改时间：2026-07-02 19:34:23" itemprop="dateModified" datetime="2026-07-02T19:34:23+08:00">2026-07-02</time>
-    </span>
-
-  
-</div>
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-          <p>Welcome to <a target="_blank" rel="noopener" href="https://hexo.io/">Hexo</a>! This is your very first post. Check <a target="_blank" rel="noopener" href="https://hexo.io/docs/">documentation</a> for more info. If you get any problems when using Hexo, you can find the answer in <a target="_blank" rel="noopener" href="https://hexo.io/docs/troubleshooting.html">troubleshooting</a> or you can ask me on <a target="_blank" rel="noopener" href="https://github.com/hexojs/hexo/issues">GitHub</a>.</p>
-<h2 id="Quick-Start"><a href="#Quick-Start" class="headerlink" title="Quick Start"></a>Quick Start</h2><h3 id="Create-a-new-post"><a href="#Create-a-new-post" class="headerlink" title="Create a new post"></a>Create a new post</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo new <span class="string">&quot;My New Post&quot;</span></span><br></pre></td></tr></table></figure>
-
-<p>More info: <a target="_blank" rel="noopener" href="https://hexo.io/docs/writing.html">Writing</a></p>
-<h3 id="Run-server"><a href="#Run-server" class="headerlink" title="Run server"></a>Run server</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo server</span><br></pre></td></tr></table></figure>
-
-<p>More info: <a target="_blank" rel="noopener" href="https://hexo.io/docs/server.html">Server</a></p>
-<h3 id="Generate-static-files"><a href="#Generate-static-files" class="headerlink" title="Generate static files"></a>Generate static files</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo generate</span><br></pre></td></tr></table></figure>
-
-<p>More info: <a target="_blank" rel="noopener" href="https://hexo.io/docs/generating.html">Generating</a></p>
-<h3 id="Deploy-to-remote-sites"><a href="#Deploy-to-remote-sites" class="headerlink" title="Deploy to remote sites"></a>Deploy to remote sites</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo deploy</span><br></pre></td></tr></table></figure>
-
-<p>More info: <a target="_blank" rel="noopener" href="https://hexo.io/docs/one-command-deployment.html">Deployment</a></p>
-
-      
-    </div>
-
-    
-    
-    
-
-    <footer class="post-footer">
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-</div>
 
 
 

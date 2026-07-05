@@ -192,9 +192,15 @@
         <i class="far fa-calendar"></i>
       </span>
       <span class="post-meta-item-text">发表于</span>
-      
 
-      <time title="创建时间：2026-07-02 00:00:00 / 修改时间：20:30:25" itemprop="dateCreated datePublished" datetime="2026-07-02T00:00:00+08:00">2026-07-02</time>
+      <time title="创建时间：2026-07-02 00:00:00" itemprop="dateCreated datePublished" datetime="2026-07-02T00:00:00+08:00">2026-07-02</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
+      </span>
+      <span class="post-meta-item-text">更新于</span>
+      <time title="修改时间：2026-07-05 22:59:19" itemprop="dateModified" datetime="2026-07-05T22:59:19+08:00">2026-07-05</time>
     </span>
     <span class="post-meta-item">
       <span class="post-meta-item-icon">
@@ -239,11 +245,11 @@
 </tr>
 <tr>
 <td>内存</td>
-<td>16GB DDR4-2400 光威（单通道，计划升级到 32GB）</td>
+<td>24GB DDR4-2400（计划升级到 128GB）</td>
 </tr>
 <tr>
 <td>系统盘</td>
-<td>171GB SSD（可用 83GB）</td>
+<td>171GB SSD（可用 103GB）</td>
 </tr>
 <tr>
 <td>系统</td>
@@ -251,7 +257,7 @@
 </tr>
 <tr>
 <td>网络</td>
-<td>无线 wlp5s0，192.168.x.x&#x2F;16</td>
+<td>无线 wlp5s0，10.99.x.x&#x2F;24</td>
 </tr>
 </tbody></table>
 <h3 id="为什么选-AMD-显卡？"><a href="#为什么选-AMD-显卡？" class="headerlink" title="为什么选 AMD 显卡？"></a>为什么选 AMD 显卡？</h3><p>RX 7900 XTX 拥有 24GB GDDR6 显存。在消费级显卡里，24GB 这个价位段的选择并不多 —— NVIDIA 这边要 RTX 4090 才能达到 24GB，而 AMD 的 7900 XTX 价格更友好，性价比明显。配合 ROCm 7 的日益成熟，在消费级 AMD GPU 上跑 LLM 已经是一条完全可行的路。</p>
@@ -313,7 +319,7 @@
 <p><strong>经验之谈：</strong> 编译时间取决于 CPU 核心数。i5-10400F（6 核）大约需要 15-20 分钟。如果用的是更多核心的 CPU，可以进一步缩短。</p>
 </blockquote>
 <h2 id="📦-四、模型选择"><a href="#📦-四、模型选择" class="headerlink" title="📦 四、模型选择"></a>📦 四、模型选择</h2><p>模型是本次部署的核心选择。我选用了 <strong>Qwen 3.6 27B</strong> 的 <strong>abliterated</strong> 版本：</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">模型文件: huihui-qwen3.6-27b-abliterated-q4_k_m.gguf</span><br><span class="line">大小: 16GB</span><br><span class="line">量化: Q4_K_M（4-bit 混合精度）</span><br></pre></td></tr></table></figure>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">模型文件: huihui-qwen3.6-27b-abliterated-q4_k_m.gguf</span><br><span class="line">大小: 16.5GB</span><br><span class="line">量化: Q4_K_M（4-bit 混合精度）</span><br></pre></td></tr></table></figure>
 
 <h3 id="为什么是-abliterated-版本？"><a href="#为什么是-abliterated-版本？" class="headerlink" title="为什么是 abliterated 版本？"></a>为什么是 abliterated 版本？</h3><p>abliterated（去拒绝化）版本是通过 <a target="_blank" rel="noopener" href="https://github.com/tjgertob/obliteratus">OBLITERATUS</a> 工具处理过的模型。它去除了模型的安全拒绝机制，让输出更加自由灵活。</p>
 <p>对于本地私有部署来说，这个特性非常实用：</p>
@@ -322,10 +328,10 @@
 <li>✅ <strong>输出更直接</strong> —— 不需要绕过安全过滤，回答更自然</li>
 <li>✅ <strong>更适合个人使用和开发调试</strong> —— 没有安全层的干扰，方便测试和迭代</li>
 </ul>
-<h3 id="为什么选-Qwen-3-6-27B？"><a href="#为什么选-Qwen-3-6-27B？" class="headerlink" title="为什么选 Qwen 3.6 27B？"></a>为什么选 Qwen 3.6 27B？</h3><p>27B 参数规模是一个甜蜜点 —— 比 7B&#x2F;8B 强一个档次，同时 24GB 显存用 Q4_K_M 量化（约 16GB）后可以轻松装下，还留有 8GB 给 KV cache 和系统开销。</p>
+<h3 id="为什么选-Qwen-3-6-27B？"><a href="#为什么选-Qwen-3-6-27B？" class="headerlink" title="为什么选 Qwen 3.6 27B？"></a>为什么选 Qwen 3.6 27B？</h3><p>27B 参数规模是一个甜蜜点 —— 比 7B&#x2F;8B 强一个档次，同时 24GB 显存用 Q4_K_M 量化（约 16.5GB）后可以装下，还留有显存给 KV cache 和系统开销。</p>
 <p>如果你显存更大（48GB+），可以考虑 Qwen 3.6 更大参数的版本。如果显存更小（12GB 左右），7B&#x2F;8B 的模型会更合适。</p>
 <h2 id="⚙️-五、systemd-守护进程"><a href="#⚙️-五、systemd-守护进程" class="headerlink" title="⚙️ 五、systemd 守护进程"></a>⚙️ 五、systemd 守护进程</h2><p>为了让模型服务持续运行，配置了 systemd 服务。这样即使 SSH 断开，服务也不会停止。</p>
-<h3 id="服务文件"><a href="#服务文件" class="headerlink" title="服务文件"></a>服务文件</h3><figure class="highlight ini"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># /etc/systemd/system/llama.service</span></span><br><span class="line"><span class="section">[Unit]</span></span><br><span class="line"><span class="attr">Description</span>=Llama CPP Server with ROCm Acceleration (<span class="number">128</span>K + Continuous Batching)</span><br><span class="line"><span class="attr">After</span>=network.target</span><br><span class="line"></span><br><span class="line"><span class="section">[Service]</span></span><br><span class="line"><span class="attr">Type</span>=simple</span><br><span class="line"><span class="attr">User</span>=elric</span><br><span class="line"><span class="attr">ExecStart</span>=/home/elric/llama.cpp/build/bin/llama-server \</span><br><span class="line">  -m /home/elric/llama.cpp/models/huihui-qwen3.6-27b-abliterated-q4_k_m.gguf \</span><br><span class="line">  --alias qwen3.6-27b \</span><br><span class="line">  --host 0.0.0.0 \</span><br><span class="line">  --port 1234 \</span><br><span class="line">  -ngl 99 \</span><br><span class="line">  --flash-attn on \</span><br><span class="line">  -np 1 \</span><br><span class="line">  -b 4096 \</span><br><span class="line">  -ub 1024 \</span><br><span class="line">  --ctx-size 131072 \</span><br><span class="line">  -ctk q8_0 \</span><br><span class="line">  -ctv q8_0 \</span><br><span class="line">  --threads 6 \</span><br><span class="line">  --jinja</span><br><span class="line"><span class="attr">Restart</span>=<span class="literal">on</span>-failure</span><br><span class="line"><span class="attr">RestartSec</span>=<span class="number">5</span></span><br><span class="line"></span><br><span class="line"><span class="section">[Install]</span></span><br><span class="line"><span class="attr">WantedBy</span>=multi-user.target</span><br></pre></td></tr></table></figure>
+<h3 id="服务文件"><a href="#服务文件" class="headerlink" title="服务文件"></a>服务文件</h3><figure class="highlight ini"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># /etc/systemd/system/llama.service</span></span><br><span class="line"><span class="section">[Unit]</span></span><br><span class="line"><span class="attr">Description</span>=Llama CPP Server with ROCm Acceleration (<span class="number">64</span>K + Continuous Batching)</span><br><span class="line"><span class="attr">After</span>=network.target</span><br><span class="line"></span><br><span class="line"><span class="section">[Service]</span></span><br><span class="line"><span class="attr">Type</span>=simple</span><br><span class="line"><span class="attr">User</span>=elric</span><br><span class="line"><span class="attr">ExecStart</span>=/home/elric/llama.cpp/build/bin/llama-server \</span><br><span class="line">  -m /home/elric/llama.cpp/models/huihui-qwen3.6-27b-abliterated-q4_k_m.gguf \</span><br><span class="line">  --alias qwen3.6-27b \</span><br><span class="line">  --host 0.0.0.0 \</span><br><span class="line">  --port 1234 \</span><br><span class="line">  -ngl 99 \</span><br><span class="line">  --flash-attn on \</span><br><span class="line">  -np 1 \</span><br><span class="line">  -b 4096 \</span><br><span class="line">  -ub 1024 \</span><br><span class="line">  --ctx-size 65536 \</span><br><span class="line">  -ctk q8_0 \</span><br><span class="line">  -ctv q8_0 \</span><br><span class="line">  --threads 6 \</span><br><span class="line">  --jinja</span><br><span class="line"><span class="attr">Restart</span>=always</span><br><span class="line"><span class="attr">RestartSec</span>=<span class="number">5</span></span><br><span class="line"></span><br><span class="line"><span class="section">[Install]</span></span><br><span class="line"><span class="attr">WantedBy</span>=multi-user.target</span><br></pre></td></tr></table></figure>
 
 <p>然后启用服务：</p>
 <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">sudo</span> systemctl <span class="built_in">enable</span> llama.service</span><br><span class="line"><span class="built_in">sudo</span> systemctl start llama.service</span><br></pre></td></tr></table></figure>
@@ -341,7 +347,7 @@
 <tbody><tr>
 <td><code>-ngl</code></td>
 <td>99</td>
-<td>将所有层 offload 到 GPU，CPU 只做 KV cache 管理</td>
+<td>将所有层 offload 到 GPU，CPU 只做调度和采样</td>
 </tr>
 <tr>
 <td><code>--flash-attn</code></td>
@@ -360,8 +366,8 @@
 </tr>
 <tr>
 <td><code>--ctx-size</code></td>
-<td>131072</td>
-<td>上下文窗口 128K tokens</td>
+<td>65536</td>
+<td>上下文窗口 64K tokens</td>
 </tr>
 <tr>
 <td><code>-ctk</code> &#x2F; <code>-ctv</code></td>
@@ -379,36 +385,59 @@
 <td>启用 Jinja 模板，支持 ChatML 等模板格式</td>
 </tr>
 </tbody></table>
-<h3 id="KV-cache-量化选择"><a href="#KV-cache-量化选择" class="headerlink" title="KV cache 量化选择"></a>KV cache 量化选择</h3><p>这部分值得多花点篇幅。</p>
+<h3 id="显存预算：为什么是-q8-0-64K？"><a href="#显存预算：为什么是-q8-0-64K？" class="headerlink" title="显存预算：为什么是 q8_0 + 64K？"></a>显存预算：为什么是 q8_0 + 64K？</h3><p>这部分值得多花点篇幅，因为这是整个配置最关键的决策。</p>
 <p>KV cache 存储了对话历史中的注意力信息。它越大，能记住的上下文就越长，但也越占显存。量化策略需要在精度和显存之间做权衡。</p>
-<p><strong>显存账本：</strong></p>
+<p><strong>24GB 显存的账本：</strong></p>
 <table>
 <thead>
 <tr>
 <th>项目</th>
-<th>占用</th>
+<th>q8_0 + 64K ✅</th>
+<th>q8_0 + 128K ❌</th>
+<th>q4_0 + 128K ✅</th>
 </tr>
 </thead>
 <tbody><tr>
 <td>模型权重（Q4_K_M）</td>
-<td>~16GB</td>
+<td>~16.5 GB</td>
+<td>~16.5 GB</td>
+<td>~16.5 GB</td>
 </tr>
 <tr>
-<td>KV cache（q8_0, 128K）</td>
-<td>~6-12GB（随对话长度变化）</td>
+<td>KV cache（最大）</td>
+<td>~3.8 GB</td>
+<td>~7.5 GB</td>
+<td>~3.8 GB</td>
 </tr>
 <tr>
-<td>ROCm 运行时 + 框架开销</td>
-<td>~1-2GB</td>
+<td>ROCm 运行时 + 框架</td>
+<td>~1-2 GB</td>
+<td>~1-2 GB</td>
+<td>~1-2 GB</td>
 </tr>
 <tr>
 <td><strong>合计</strong></td>
-<td><strong>~23-24GB（临界）</strong></td>
+<td><strong>~21-22 GB</strong></td>
+<td><strong>~25-26 GB</strong></td>
+<td><strong>~21-22 GB</strong></td>
+</tr>
+<tr>
+<td><strong>结果</strong></td>
+<td>✅ 安全</td>
+<td>❌ 溢出到系统内存</td>
+<td>✅ 安全</td>
 </tr>
 </tbody></table>
-<p>24GB 显存跑得比较满，但经过实际验证，KV cache 可以完全保留在显存内，不会溢出到系统内存，所以性能不会受到 PCIe 瓶颈的影响。</p>
+<p><strong>q8_0 + 128K 会溢出 24GB 显存。</strong> 之前配置就是这样，VRAM 占用达到 86%，KV cache 溢出走 PCIe 3.0（仅 16 GB&#x2F;s），生成速度直接从 25 t&#x2F;s 掉到 10 t&#x2F;s 以下。</p>
+<p><strong>最终方案：q8_0 + 64K</strong></p>
+<ul>
+<li>✅ 显存安全（~22 GB，留了 ~2 GB 余量）</li>
+<li>✅ q8_0 高精度 KV cache，长对话不丢失上下文精度</li>
+<li>✅ 64K 上下文对日常使用完全够用（约 4-5 万汉字）</li>
+<li>✅ 速度稳定在 <strong>~25 t&#x2F;s</strong>，不波动</li>
+</ul>
 <blockquote>
-<p><strong>如果你选择 q4_0 KV cache：</strong> 每个 token 只需 32KB，128K 上下文占用约 4GB，显存压力更小（合计 ~20GB）。适合显存余量紧张或者想要更多安全边距的情况。</p>
+<p><strong>如果你选择 q4_0 KV cache：</strong> 每个 token 只需约 32KB，128K 上下文占用约 3.8GB，显存压力更小。适合想要更大上下文窗口的情况。</p>
 <p><strong>q8_0 的优势：</strong> 精度更高，长对话中缓存命中率更好，减少不必要的重算。实测下来，在显存够用的前提下，q8_0 带来的稳定性提升是值得的。</p>
 </blockquote>
 <h2 id="📊-六、性能实测"><a href="#📊-六、性能实测" class="headerlink" title="📊 六、性能实测"></a>📊 六、性能实测</h2><p>以下是实际运行中的数据，全部从服务日志直接抓取（<code>journalctl -u llama.service</code>）：</p>
@@ -422,21 +451,21 @@
 </thead>
 <tbody><tr>
 <td>持续长生成（800+ tokens）</td>
-<td><strong>~22.45 tokens&#x2F;s</strong></td>
-<td>~45ms&#x2F;token</td>
+<td><strong>~25 tokens&#x2F;s</strong></td>
+<td>~40ms&#x2F;token</td>
 </tr>
 <tr>
 <td>短对话（KV 缓存命中）</td>
-<td><strong>~32 tokens&#x2F;s</strong></td>
-<td>~31ms&#x2F;token</td>
+<td><strong>~25 tokens&#x2F;s</strong></td>
+<td>~40ms&#x2F;token</td>
 </tr>
 <tr>
 <td>长对话（KV 缓存未命中）</td>
-<td><strong>~17-19 tokens&#x2F;s</strong></td>
-<td>~55ms&#x2F;token</td>
+<td><strong>~24.6-24.8 t&#x2F;s</strong></td>
+<td>~40.5ms&#x2F;token</td>
 </tr>
 </tbody></table>
-<p>22-23 tokens&#x2F;s 的持续生成速度意味着一段 200 词的英文回复大约需要 9 秒完成，完全满足实时对话的需求。</p>
+<p>~25 tokens&#x2F;s 的持续生成速度意味着一段 200 词的英文回复大约需要 8 秒完成，完全满足实时对话的需求。</p>
 <h3 id="Prompt-处理速度（Prefill）"><a href="#Prompt-处理速度（Prefill）" class="headerlink" title="Prompt 处理速度（Prefill）"></a>Prompt 处理速度（Prefill）</h3><table>
 <thead>
 <tr>
@@ -446,12 +475,12 @@
 </tr>
 </thead>
 <tbody><tr>
-<td>31,757 tokens（长上下文）</td>
-<td><strong>452.81 tokens&#x2F;s</strong></td>
-<td>2.21ms&#x2F;token</td>
+<td>~1000 tokens（典型对话）</td>
+<td><strong>~428 tokens&#x2F;s</strong></td>
+<td>~2.3ms&#x2F;token</td>
 </tr>
 </tbody></table>
-<p>处理一个 3 万 token 的长 prompt 只需要约 69 秒。FlashAttention 的加速效果非常明显。</p>
+<p>FlashAttention 的加速效果非常明显。</p>
 <h3 id="系统资源"><a href="#系统资源" class="headerlink" title="系统资源"></a>系统资源</h3><table>
 <thead>
 <tr>
@@ -461,36 +490,38 @@
 </thead>
 <tbody><tr>
 <td>GPU 显存占用</td>
-<td>86%（约 20.6GB &#x2F; 24GB）</td>
+<td>~76%（约 18.2GB &#x2F; 24GB）</td>
 </tr>
 <tr>
 <td>GPU 温度</td>
-<td>67°C（空闲），峰值约 83°C</td>
+<td>42°C（待机），63°C（负载）</td>
 </tr>
 <tr>
 <td>GPU 功耗</td>
-<td>61W（空闲） &#x2F; ~300W（峰值）</td>
-</tr>
-<tr>
-<td>系统内存使用</td>
-<td>6.6GB &#x2F; 15GB（44%）</td>
+<td>88W（空闲） &#x2F; ~300W（峰值）</td>
 </tr>
 <tr>
 <td>服务运行时间</td>
 <td>持续运行，稳定无故障</td>
 </tr>
+<tr>
+<td>日志错误</td>
+<td>0 条</td>
+</tr>
 </tbody></table>
-<h2 id="💡-七、调优心得"><a href="#💡-七、调优心得" class="headerlink" title="💡 七、调优心得"></a>💡 七、调优心得</h2><h3 id="1-KV-cache-量化是性能关键"><a href="#1-KV-cache-量化是性能关键" class="headerlink" title="1. KV cache 量化是性能关键"></a>1. KV cache 量化是性能关键</h3><p>早期配置使用 q4_0 KV cache，后来调整为 q8_0。虽然显存占用从 77% 上升到了 86%，但长对话场景下的生成速度有了明显提升。原因是 KV cache 精度更高，减少了缓存失效带来的重算 —— 每次不用重新处理之前的上下文。</p>
-<p><strong>教训：</strong> 如果显存够，优先给 KV cache 更高的量化精度，收益比想象中更大。</p>
+<h2 id="💡-七、调优心得"><a href="#💡-七、调优心得" class="headerlink" title="💡 七、调优心得"></a>💡 七、调优心得</h2><h3 id="1-显存预算是第一要务"><a href="#1-显存预算是第一要务" class="headerlink" title="1. 显存预算是第一要务"></a>1. 显存预算是第一要务</h3><p>最开始用了 q8_0 + 128K 上下文，显存压到 86%，KV cache 溢出走 PCIe 3.0，速度直接腰斩。将 <code>--ctx-size</code> 降到 64K 后，显存降到 ~76%，速度稳定在 25 t&#x2F;s，问题彻底解决。</p>
+<p><strong>教训：</strong> 24GB 显存不是无限的，q8_0 精度虽好，但 128K KV cache 会吃掉 7.5GB，加上 16.5GB 模型就 24GB+，一定会溢出。<strong>先算账，再调参。</strong></p>
 <h3 id="2-PCIe-3-0-是隐形的瓶颈"><a href="#2-PCIe-3-0-是隐形的瓶颈" class="headerlink" title="2. PCIe 3.0 是隐形的瓶颈"></a>2. PCIe 3.0 是隐形的瓶颈</h3><p>B460 主板的 PCIe 3.0 带宽只有 ~16 GB&#x2F;s。当显存不足、KV cache 被 offload 到系统内存时，每次 token 生成都要通过 PCIe 总线搬运数据，延迟显著增加。</p>
-<p><strong>实际体验：</strong> 当 KV cache 溢出到 CPU 内存时，生成速度能从 23 t&#x2F;s 掉到 10 t&#x2F;s 以下。确保 KV cache 完全留在显存里是提升性能的第一要务。</p>
+<p><strong>实际体验：</strong> 当 KV cache 溢出到 CPU 内存时，生成速度能从 25 t&#x2F;s 掉到 10 t&#x2F;s 以下。确保 KV cache 完全留在显存里是提升性能的第一要务。</p>
 <p><strong>如果你要装机：</strong> 尽量选 PCIe 4.0 以上的主板。PCIe 3.0 在显存溢出时拖累严重。</p>
-<h3 id="3-批次参数影响很大"><a href="#3-批次参数影响很大" class="headerlink" title="3. 批次参数影响很大"></a>3. 批次参数影响很大</h3><p>将 <code>-b</code> 从 2048 提升到 4096、<code>-ub</code> 从 512 提升到 1024 后，GPU 利用率更高，生成速度从 ~21 tokens&#x2F;s 提升到了 ~23 tokens&#x2F;s。更大的批次意味着 GPU 的计算单元能更好地并行工作，减少等待。</p>
+<h3 id="3-批次参数影响很大"><a href="#3-批次参数影响很大" class="headerlink" title="3. 批次参数影响很大"></a>3. 批次参数影响很大</h3><p>将 <code>-b</code> 从 2048 提升到 4096、<code>-ub</code> 从 512 提升到 1024 后，GPU 利用率更高，生成速度从 ~21 tokens&#x2F;s 提升到了 ~25 tokens&#x2F;s。更大的批次意味着 GPU 的计算单元能更好地并行工作，减少等待。</p>
 <p><strong>建议：</strong> 如果你的显卡显存充裕，可以把 <code>-b</code> 设得更大（8192），看看效果。</p>
-<h3 id="4-16GB-内存偏紧"><a href="#4-16GB-内存偏紧" class="headerlink" title="4. 16GB 内存偏紧"></a>4. 16GB 内存偏紧</h3><p>系统只有 16GB 内存，llama 进程本身就要占用约 6GB。加上系统和后台进程，可用内存比较紧张。在高负载时，系统会用到 Swap，影响响应速度。</p>
-<p><strong>计划：</strong> 主板有 4 个内存槽，最大支持 64GB。准备升级到 32GB（2×16GB 双通道），这样不仅给 llama.cpp 更多余量，还能顺便解决单通道的瓶颈。</p>
+<h3 id="4-KV-cache-量化策略"><a href="#4-KV-cache-量化策略" class="headerlink" title="4. KV cache 量化策略"></a>4. KV cache 量化策略</h3><p>早期配置使用 q4_0 KV cache，后来调整为 q8_0。虽然显存占用从 ~65% 上升到了 ~76%，但长对话场景下的生成速度更加稳定。原因是 KV cache 精度更高，减少了缓存失效带来的重算 —— 每次不用重新处理之前的上下文。</p>
+<p><strong>结论：</strong> 在显存预算内，优先给 KV cache 更高的量化精度。但前提是 <strong>总显存不溢出</strong> —— 如果 q8_0 会溢出，那就果断用 q4_0。</p>
+<h3 id="5-16GB-内存偏紧"><a href="#5-16GB-内存偏紧" class="headerlink" title="5. 16GB 内存偏紧"></a>5. 16GB 内存偏紧</h3><p>系统原只有 16GB 内存，llama 进程本身就要占用约 6GB。加上系统和后台进程，可用内存比较紧张。在高负载时，系统会用到 Swap，影响响应速度。</p>
+<p><strong>已升级到 24GB，计划最终升级到 128GB M.2</strong>，不仅给 llama.cpp 更多余量，还能彻底解决内存瓶颈。</p>
 <h2 id="🔗-八、接入-Hermes-Agent"><a href="#🔗-八、接入-Hermes-Agent" class="headerlink" title="🔗 八、接入 Hermes Agent"></a>🔗 八、接入 Hermes Agent</h2><p>部署完成后，模型通过 OpenAI 兼容 API 提供服务。Hermes Agent 通过自定义 provider 连接到本地端点：</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">http://localhost:1234/v1</span><br></pre></td></tr></table></figure>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">http://10.99.77.77:1234/v1</span><br></pre></td></tr></table></figure>
 
 <p>这意味着：</p>
 <ul>
@@ -502,15 +533,15 @@
 <h2 id="📝-九、总结"><a href="#📝-九、总结" class="headerlink" title="📝 九、总结"></a>📝 九、总结</h2><p>在消费级硬件上部署 27B 参数的本地大模型是完全可行的。RX 7900 XTX 的 24GB 显存是一个甜蜜点，配合 ROCm 7 和 llama.cpp，可以实现稳定的推理服务。</p>
 <p><strong>核心经验：</strong></p>
 <ol>
-<li><strong>显存是硬约束</strong> —— 24GB 刚好能跑 27B 量化模型 + 大容量 KV cache，选型时优先考虑显存容量</li>
-<li><strong>KV cache 量化策略直接影响性能和精度</strong> —— 显存够的话，优先用 q8_0</li>
+<li><strong>显存预算是硬约束</strong> —— 24GB 要精确计算：模型 + KV cache + ROCm 开销，超出就会溢出</li>
+<li><strong>q8_0 + 64K 是 24GB 显存的甜点配置</strong> —— 高精度 KV cache + 安全显存余量 + 稳定速度</li>
 <li><strong>PCIe 带宽不容忽视</strong> —— 尽量让数据留在显存内，装机时选 PCIe 4.0 主板</li>
 <li><strong>abliterated 版本更适合本地私有部署</strong> —— 没有安全层的干扰，输出更自由</li>
 <li><strong>systemd 守护 + OpenAI API 兼容 &#x3D; 即插即用的服务</strong> —— 任何支持 OpenAI API 的客户端都能直接接入</li>
 </ol>
-<p><strong>下一步：</strong> 内存升级到 32GB（双通道），预计能进一步提升整体稳定性。</p>
+<p><strong>下一步：</strong> 内存升级到 128GB M.2，移除 Windows 11，让这台机器纯粹为 AI 推理服务。</p>
 <hr>
-<p><em>本文中的性能数据来自 2026 年 6 月 30 日部署完成后的实际运行日志，测试环境为局域网内部。llama.cpp 版本为 commit 3fc4e1052。</em></p>
+<p><em>本文中的性能数据来自 2026 年 7 月的实际运行日志，测试环境为局域网内部。llama.cpp 版本为 v9873（commit a4107133a）。</em></p>
 
       
     </div>
@@ -573,7 +604,7 @@
         <i class="far fa-calendar-check"></i>
       </span>
       <span class="post-meta-item-text">更新于</span>
-      <time title="修改时间：2026-07-02 20:30:25" itemprop="dateModified" datetime="2026-07-02T20:30:25+08:00">2026-07-02</time>
+      <time title="修改时间：2026-07-05 22:59:19" itemprop="dateModified" datetime="2026-07-05T22:59:19+08:00">2026-07-05</time>
     </span>
     <span class="post-meta-item">
       <span class="post-meta-item-icon">
@@ -703,7 +734,7 @@
         <i class="far fa-calendar-check"></i>
       </span>
       <span class="post-meta-item-text">更新于</span>
-      <time title="修改时间：2026-07-02 20:30:25" itemprop="dateModified" datetime="2026-07-02T20:30:25+08:00">2026-07-02</time>
+      <time title="修改时间：2026-07-05 22:59:19" itemprop="dateModified" datetime="2026-07-05T22:59:19+08:00">2026-07-05</time>
     </span>
     <span class="post-meta-item">
       <span class="post-meta-item-icon">
@@ -796,7 +827,7 @@
         <i class="far fa-calendar-check"></i>
       </span>
       <span class="post-meta-item-text">更新于</span>
-      <time title="修改时间：2026-07-02 20:30:25" itemprop="dateModified" datetime="2026-07-02T20:30:25+08:00">2026-07-02</time>
+      <time title="修改时间：2026-07-05 22:59:19" itemprop="dateModified" datetime="2026-07-05T22:59:19+08:00">2026-07-05</time>
     </span>
     <span class="post-meta-item">
       <span class="post-meta-item-icon">
@@ -888,7 +919,7 @@
         <i class="far fa-calendar-check"></i>
       </span>
       <span class="post-meta-item-text">更新于</span>
-      <time title="修改时间：2026-07-02 20:30:25" itemprop="dateModified" datetime="2026-07-02T20:30:25+08:00">2026-07-02</time>
+      <time title="修改时间：2026-07-05 22:59:19" itemprop="dateModified" datetime="2026-07-05T22:59:19+08:00">2026-07-05</time>
     </span>
     <span class="post-meta-item">
       <span class="post-meta-item-icon">
@@ -981,7 +1012,7 @@
         <i class="far fa-calendar-check"></i>
       </span>
       <span class="post-meta-item-text">更新于</span>
-      <time title="修改时间：2026-07-02 20:30:25" itemprop="dateModified" datetime="2026-07-02T20:30:25+08:00">2026-07-02</time>
+      <time title="修改时间：2026-07-05 22:59:19" itemprop="dateModified" datetime="2026-07-05T22:59:19+08:00">2026-07-05</time>
     </span>
     <span class="post-meta-item">
       <span class="post-meta-item-icon">
@@ -1073,7 +1104,7 @@
         <i class="far fa-calendar-check"></i>
       </span>
       <span class="post-meta-item-text">更新于</span>
-      <time title="修改时间：2026-07-02 20:30:25" itemprop="dateModified" datetime="2026-07-02T20:30:25+08:00">2026-07-02</time>
+      <time title="修改时间：2026-07-05 22:59:19" itemprop="dateModified" datetime="2026-07-05T22:59:19+08:00">2026-07-05</time>
     </span>
     <span class="post-meta-item">
       <span class="post-meta-item-icon">
@@ -1165,7 +1196,7 @@
         <i class="far fa-calendar-check"></i>
       </span>
       <span class="post-meta-item-text">更新于</span>
-      <time title="修改时间：2026-07-02 20:30:25" itemprop="dateModified" datetime="2026-07-02T20:30:25+08:00">2026-07-02</time>
+      <time title="修改时间：2026-07-05 22:59:19" itemprop="dateModified" datetime="2026-07-05T22:59:19+08:00">2026-07-05</time>
     </span>
 
   

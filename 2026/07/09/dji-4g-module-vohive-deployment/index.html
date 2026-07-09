@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222"><meta name="generator" content="Hexo 8.1.1">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css" integrity="sha256-VHqXKFhhMxcpubYf9xiWdCiojEbY9NexQ4jh8AxbvcM=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"yourdomain.com","root":"/","images":"/images","scheme":"Gemini","darkmode":false,"version":"8.26.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"post","padding":18,"offset":12},"hljswrap":true,"codeblock":{"theme":{"light":"default","dark":"stackoverflow-dark"},"prism":{"light":"prism","dark":"prism-dark"},"copy_button":{"enable":false,"style":null},"fold":{"enable":false,"height":500},"language":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"duration":200,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"}}</script><script src="/js/config.js" defer></script>
+
+    <meta name="description" content="大疆 1 代 4G 模块本质是移远 Quectel EG25-G 公版模组，只是 USB VID&#x2F;PID 被写成了大疆私有值。VoHive 平台只认标准 EC25 身份，不改就用不了。本文记录完整的改写和部署过程，包括踩过的坑。  背景手头有一个大疆 1 代 4G 模块（Type-C 口），想用来跑 VoHive 平台——一个面向高通 4G&#x2F;LTE 模组的综合管理与代理服务平">
+<meta property="og:type" content="article">
+<meta property="og:title" content="大疆 1 代 4G 模块改 USB 身份 + VoHive 平台部署全记录">
+<meta property="og:url" content="https://yourdomain.com/2026/07/09/dji-4g-module-vohive-deployment/index.html">
+<meta property="og:site_name" content="Elric&#39;s Desk">
+<meta property="og:description" content="大疆 1 代 4G 模块本质是移远 Quectel EG25-G 公版模组，只是 USB VID&#x2F;PID 被写成了大疆私有值。VoHive 平台只认标准 EC25 身份，不改就用不了。本文记录完整的改写和部署过程，包括踩过的坑。  背景手头有一个大疆 1 代 4G 模块（Type-C 口），想用来跑 VoHive 平台——一个面向高通 4G&#x2F;LTE 模组的综合管理与代理服务平">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2026-07-09T12:00:00.000Z">
+<meta property="article:modified_time" content="2026-07-09T12:00:00.000Z">
+<meta property="article:author" content="Elric">
+<meta property="article:tag" content="4G模块">
+<meta property="article:tag" content="AT命令">
+<meta property="article:tag" content="DJI">
+<meta property="article:tag" content="Quectel">
+<meta property="article:tag" content="VoHive">
+<meta property="article:tag" content="自托管">
+<meta name="twitter:card" content="summary">
+
+
+<link rel="canonical" href="https://yourdomain.com/2026/07/09/dji-4g-module-vohive-deployment/">
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://yourdomain.com/2026/07/09/dji-4g-module-vohive-deployment/","path":"2026/07/09/dji-4g-module-vohive-deployment/","title":"大疆 1 代 4G 模块改 USB 身份 + VoHive 平台部署全记录"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>大疆 1 代 4G 模块改 USB 身份 + VoHive 平台部署全记录 | Elric's Desk</title>
+  
+
+
+
+
+
+
+
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous" defer></script>
+<script src="/js/utils.js" defer></script><script src="/js/motion.js" defer></script><script src="/js/sidebar.js" defer></script><script src="/js/next-boot.js" defer></script>
+
+  
+
+
+
+
+
+
+  
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">Elric's Desk</p>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">雜亂的書桌</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger" aria-label="搜索" role="button">
+    </div>
+  </div>
+</div>
+
+
+
+
+
+
+
+</header>
+        
+  
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%83%8C%E6%99%AF"><span class="nav-number">1.</span> <span class="nav-text">背景</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#VoHive-%E8%83%BD%E5%81%9A%E4%BB%80%E4%B9%88%EF%BC%9F"><span class="nav-number">2.</span> <span class="nav-text">VoHive 能做什么？</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%F0%9F%93%A1-%E5%A4%9A%E6%A8%A1%E7%BB%84%E5%B9%B6%E5%8F%91%E7%AE%A1%E7%90%86"><span class="nav-number">2.1.</span> <span class="nav-text">📡 多模组并发管理</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%F0%9F%8C%90-%E8%BD%BB%E9%87%8F%E7%BA%A7%E4%BB%A3%E7%90%86%E5%BC%95%E6%93%8E"><span class="nav-number">2.2.</span> <span class="nav-text">🌐 轻量级代理引擎</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%F0%9F%92%AC-%E7%9F%AD%E4%BF%A1%E6%94%B6%E5%8F%91%E4%B8%AD%E5%BF%83"><span class="nav-number">2.3.</span> <span class="nav-text">💬 短信收发中心</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%F0%9F%93%B1-eSIM-%E5%85%A8%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F%E7%AE%A1%E7%90%86"><span class="nav-number">2.4.</span> <span class="nav-text">📱 eSIM 全生命周期管理</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%F0%9F%94%94-%E5%A4%9A%E6%B8%A0%E9%81%93%E9%80%9A%E7%9F%A5%E6%8E%A8%E9%80%81"><span class="nav-number">2.5.</span> <span class="nav-text">🔔 多渠道通知推送</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%F0%9F%93%9E-VoWiFi-IMS-%E9%80%9A%E8%AF%9D"><span class="nav-number">2.6.</span> <span class="nav-text">📞 VoWiFi (IMS 通话)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%F0%9F%8F%97%EF%B8%8F-%E5%A4%9A%E6%9E%B6%E6%9E%84%E6%94%AF%E6%8C%81"><span class="nav-number">2.7.</span> <span class="nav-text">🏗️ 多架构支持</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%AC%AC%E4%B8%80%E6%AD%A5%EF%BC%9A%E7%A1%AC%E4%BB%B6%E8%AF%86%E5%88%AB%E4%B8%8E%E9%A9%B1%E5%8A%A8%E5%8A%A0%E8%BD%BD"><span class="nav-number">3.</span> <span class="nav-text">第一步：硬件识别与驱动加载</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%AC%AC%E4%BA%8C%E6%AD%A5%EF%BC%9AUSB-%E8%BA%AB%E4%BB%BD%E6%94%B9%E5%86%99%EF%BC%88%E5%85%B3%E9%94%AE%EF%BC%89"><span class="nav-number">4.</span> <span class="nav-text">第二步：USB 身份改写（关键）</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%B8%A9%E5%9D%91-1%EF%BC%9AAT-%E5%91%BD%E4%BB%A4%E8%AF%AD%E6%B3%95"><span class="nav-number">4.1.</span> <span class="nav-text">踩坑 1：AT 命令语法</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%B8%A9%E5%9D%91-2%EF%BC%9A%E4%BA%91%E5%86%85%E6%A0%B8%E6%B2%A1%E6%9C%89-option-%E9%A9%B1%E5%8A%A8"><span class="nav-number">4.2.</span> <span class="nav-text">踩坑 2：云内核没有 option 驱动</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%AC%AC%E4%B8%89%E6%AD%A5%EF%BC%9AVoHive-%E5%B9%B3%E5%8F%B0%E9%83%A8%E7%BD%B2"><span class="nav-number">5.</span> <span class="nav-text">第三步：VoHive 平台部署</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%87%86%E5%A4%87%E9%85%8D%E7%BD%AE%E7%9B%AE%E5%BD%95"><span class="nav-number">5.1.</span> <span class="nav-text">准备配置目录</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%88%9B%E5%BB%BA%E9%85%8D%E7%BD%AE%E6%96%87%E4%BB%B6"><span class="nav-number">5.2.</span> <span class="nav-text">创建配置文件</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Docker-Compose-%E9%83%A8%E7%BD%B2"><span class="nav-number">5.3.</span> <span class="nav-text">Docker Compose 部署</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%AA%8C%E8%AF%81"><span class="nav-number">5.4.</span> <span class="nav-text">验证</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%AC%AC%E5%9B%9B%E6%AD%A5%EF%BC%9ASIM-%E5%8D%A1%E7%8A%B6%E6%80%81%E7%A1%AE%E8%AE%A4"><span class="nav-number">6.</span> <span class="nav-text">第四步：SIM 卡状态确认</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%99%84%E5%BD%95%EF%BC%9A%E5%85%B3%E4%BA%8E%E5%8E%9F%E4%BD%9C%E8%80%85%E5%88%A0%E5%BA%93"><span class="nav-number">7.</span> <span class="nav-text">附录：关于原作者删库</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%80%BB%E7%BB%93"><span class="nav-number">8.</span> <span class="nav-text">总结</span></a></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">Elric</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">9</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+        <span class="site-state-item-count">3</span>
+        <span class="site-state-item-name">分类</span>
+      </div>
+      <div class="site-state-item site-state-tags">
+        <span class="site-state-item-count">40</span>
+        <span class="site-state-item-name">标签</span>
+      </div>
+  </nav>
+</div>
+
+        </div>
+      </div>
+    </div>
+
+    
+  </aside>
+
+
+    </div>
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://yourdomain.com/2026/07/09/dji-4g-module-vohive-deployment/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Elric">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Elric's Desk">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="大疆 1 代 4G 模块改 USB 身份 + VoHive 平台部署全记录 | Elric's Desk">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          大疆 1 代 4G 模块改 USB 身份 + VoHive 平台部署全记录
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2026-07-09 20:00:00" itemprop="dateCreated datePublished" datetime="2026-07-09T20:00:00+08:00">2026-07-09</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E7%BD%91%E7%BB%9C%E4%B8%8E%E8%87%AA%E6%89%98%E7%AE%A1/" itemprop="url" rel="index"><span itemprop="name">网络与自托管</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody"><blockquote>
+<p>大疆 1 代 4G 模块本质是移远 Quectel EG25-G 公版模组，只是 USB VID&#x2F;PID 被写成了大疆私有值。VoHive 平台只认标准 EC25 身份，不改就用不了。本文记录完整的改写和部署过程，包括踩过的坑。</p>
+</blockquote>
+<h2 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h2><p>手头有一个大疆 1 代 4G 模块（Type-C 口），想用来跑 VoHive 平台——一个面向高通 4G&#x2F;LTE 模组的综合管理与代理服务平台。</p>
+<p>但大疆给这个模块写了一个私有的 USB 身份标识（VID:PID &#x3D; <code>2ca3:4006</code>），而 VoHive 只认标准的 Quectel EC25 (<code>2c7c:0125</code>)。插上 Linux 后虽然能识别，但 VoHive 不会搭理它。</p>
+<p><strong>解决方案：</strong> 通过 AT 命令把 USB 身份永久改写为标准 EC25，然后部署 VoHive 的 Docker 版。</p>
+<h2 id="VoHive-能做什么？"><a href="#VoHive-能做什么？" class="headerlink" title="VoHive 能做什么？"></a>VoHive 能做什么？</h2><p>VoHive 由 Go 后端（Gin + GORM + SQLite）和 Vue 3 前端组成，把 4G 模组的管理能力打包成一个开箱即用的 Web 服务。以下是它的核心能力：</p>
+<h3 id="📡-多模组并发管理"><a href="#📡-多模组并发管理" class="headerlink" title="📡 多模组并发管理"></a>📡 多模组并发管理</h3><ul>
+<li>USB 热插拔自动发现，多设备实时状态监控</li>
+<li>支持 Quectel EC20&#x2F;EC25&#x2F;EC21&#x2F;EG25&#x2F;EM20 等主流高通模组</li>
+<li>同时管理多张 SIM 卡 &#x2F; eSIM，互不干扰</li>
+</ul>
+<h3 id="🌐-轻量级代理引擎"><a href="#🌐-轻量级代理引擎" class="headerlink" title="🌐 轻量级代理引擎"></a>🌐 轻量级代理引擎</h3><ul>
+<li>内建 SOCKS5 &#x2F; HTTP 代理，每个模组可独立开一个代理实例</li>
+<li>基于 <code>SO_BINDTODEVICE</code> 严格绑定出站流量到指定网卡</li>
+<li><strong>典型场景</strong>：一张卡一个代理 IP，组成私有移动代理池</li>
+</ul>
+<h3 id="💬-短信收发中心"><a href="#💬-短信收发中心" class="headerlink" title="💬 短信收发中心"></a>💬 短信收发中心</h3><ul>
+<li>Web 界面统一收发短信，支持会话和联系人管理</li>
+<li>历史短信自动落库（SQLite），可搜索可导出</li>
+<li>USSD 交互（查询余额、套餐等）</li>
+<li>⭐ <strong>实用场景</strong>：多卡接码、验证码统一管理</li>
+</ul>
+<h3 id="📱-eSIM-全生命周期管理"><a href="#📱-eSIM-全生命周期管理" class="headerlink" title="📱 eSIM 全生命周期管理"></a>📱 eSIM 全生命周期管理</h3><ul>
+<li>通过 AT 指令通道直接管理 eSIM 芯片</li>
+<li>Profile 下载、启用、停用、重命名、删除</li>
+<li>配合多 eSIM 卡，无需插拔物理卡即可切换运营商</li>
+</ul>
+<h3 id="🔔-多渠道通知推送"><a href="#🔔-多渠道通知推送" class="headerlink" title="🔔 多渠道通知推送"></a>🔔 多渠道通知推送</h3><ul>
+<li>重要短信和系统告警可推送至：<ul>
+<li><strong>Telegram</strong>、<strong>Email</strong>、<strong>PushPlus</strong>、<strong>Bark</strong>、<strong>飞书</strong>、<strong>QQ</strong></li>
+</ul>
+</li>
+<li>不漏掉任何关键短信</li>
+</ul>
+<h3 id="📞-VoWiFi-IMS-通话"><a href="#📞-VoWiFi-IMS-通话" class="headerlink" title="📞 VoWiFi (IMS 通话)"></a>📞 VoWiFi (IMS 通话)</h3><ul>
+<li>通过宽带网络隧道建立 IMS 连接</li>
+<li>地下室、弱覆盖场景下保证通话不掉线（本文暂未启用）</li>
+</ul>
+<h3 id="🏗️-多架构支持"><a href="#🏗️-多架构支持" class="headerlink" title="🏗️ 多架构支持"></a>🏗️ 多架构支持</h3><ul>
+<li>原生编译 amd64 &#x2F; arm64 &#x2F; armv7</li>
+<li>可在路由器、树莓派、小主机上跑，部署灵活</li>
+</ul>
+<blockquote>
+<p>VoHive 的 License 是 PolyForm Noncommercial 1.0.0，个人学习研究免费，商用需联系作者。</p>
+</blockquote>
+<h2 id="第一步：硬件识别与驱动加载"><a href="#第一步：硬件识别与驱动加载" class="headerlink" title="第一步：硬件识别与驱动加载"></a>第一步：硬件识别与驱动加载</h2><p>模块插到 Linux 机器上后，第一步是加载 USB 串口驱动：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">sudo</span> modprobe usbserial</span><br><span class="line"><span class="built_in">sudo</span> modprobe option</span><br></pre></td></tr></table></figure>
+
+<p>然后注入大疆的 VID&#x2F;PID，让 <code>option</code> 驱动绑定这个设备：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">echo</span> <span class="string">&quot;2ca3 4006&quot;</span> | <span class="built_in">sudo</span> <span class="built_in">tee</span> /sys/bus/usb-serial/drivers/option1/new_id</span><br></pre></td></tr></table></figure>
+
+<p>绑定成功后，<code>/dev/ttyUSB0</code> ~ <code>/dev/ttyUSB3</code> 四个串口设备出现。其中 <code>/dev/ttyUSB2</code> 是 AT 命令通道。</p>
+<blockquote>
+<p>⚠️ 注意：模块需要插入 SIM 卡才能正常枚举 USB，无 SIM 卡只亮红灯、不出现 ttyUSB 设备。</p>
+</blockquote>
+<h2 id="第二步：USB-身份改写（关键）"><a href="#第二步：USB-身份改写（关键）" class="headerlink" title="第二步：USB 身份改写（关键）"></a>第二步：USB 身份改写（关键）</h2><p>使用 <code>socat</code> 向模块发送 AT 命令，将 VID&#x2F;PID 永久写入 NVRAM：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">sudo</span> socat - /dev/ttyUSB2,b115200,raw,<span class="built_in">echo</span>=0,crnl &lt;&lt;<span class="string">&#x27;EOF&#x27;</span></span><br><span class="line">AT+QCFG=<span class="string">&quot;usbcfg&quot;</span>,2c7c,0125,0,0,8100,40E4,6300</span><br><span class="line">AT+CFUN=1,1</span><br><span class="line">EOF</span><br></pre></td></tr></table></figure>
+
+<p><strong>参数解析：</strong></p>
+<ul>
+<li><code>2c7c,0125</code> — 目标 VID:PID，即 Quectel EC25</li>
+<li><code>8100,40E4,6300</code> — 其他配置参数（厂商保留字段）</li>
+</ul>
+<p><code>AT+CFUN=1,1</code> 触发模块软复位。约 10 秒后模块重新枚举，<code>lsusb</code> 显示：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ID 2c7c:0125  Quectel Wireless Solutions Co., Ltd. </span><br></pre></td></tr></table></figure>
+
+<p>改写成功！以后这模块插任何 Linux 机器都直接认成 EC25，无需重复操作。</p>
+<h3 id="踩坑-1：AT-命令语法"><a href="#踩坑-1：AT-命令语法" class="headerlink" title="踩坑 1：AT 命令语法"></a>踩坑 1：AT 命令语法</h3><p>第一次发送 <code>AT+QCFG</code> 时返回 <code>ERROR</code>，经排查是 <strong>socat 需要 <code>crnl</code> 标志</strong>将 <code>\n</code> 转为 <code>\r\n</code>，否则模块不认识换行符。</p>
+<h3 id="踩坑-2：云内核没有-option-驱动"><a href="#踩坑-2：云内核没有-option-驱动" class="headerlink" title="踩坑 2：云内核没有 option 驱动"></a>踩坑 2：云内核没有 option 驱动</h3><p>踩了个大坑——Docker VM 跑的 <strong>cloud kernel</strong> (linux-image-cloud-amd64) 不包含 <code>usb-serial</code> 和 <code>option</code> 驱动。<code>lsusb</code> 能看到设备，但 <code>/dev/ttyUSB*</code> 一个都没有。</p>
+<p><strong>解决：</strong> 切换到 Debian 标准内核：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 查看 grub 菜单项</span></span><br><span class="line">grep menuentry /boot/grub/grub.cfg</span><br><span class="line"></span><br><span class="line"><span class="comment"># 切换到标准内核 6.1.0-50-amd64</span></span><br><span class="line">sed -i <span class="string">&#x27;s/^GRUB_DEFAULT=.*/GRUB_DEFAULT=&quot;1&gt;2&quot;/&#x27;</span> /etc/default/grub</span><br><span class="line">update-grub</span><br><span class="line">reboot</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>Debian 12 在 ESXi VM 上 <code>grub-reboot</code> 不生效，必须直接改 <code>/etc/default/grub</code>。</p>
+</blockquote>
+<h2 id="第三步：VoHive-平台部署"><a href="#第三步：VoHive-平台部署" class="headerlink" title="第三步：VoHive 平台部署"></a>第三步：VoHive 平台部署</h2><h3 id="准备配置目录"><a href="#准备配置目录" class="headerlink" title="准备配置目录"></a>准备配置目录</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">mkdir</span> -p /opt/vohive/&#123;config,data,logs&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="创建配置文件"><a href="#创建配置文件" class="headerlink" title="创建配置文件"></a>创建配置文件</h3><p>首次部署必须提供配置文件，否则容器反复重启。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">server:</span><br><span class="line">  debug: false</span><br><span class="line">  port: 7575</span><br><span class="line"></span><br><span class="line">web:</span><br><span class="line">  username: admin</span><br><span class="line">  password: admin</span><br><span class="line"></span><br><span class="line">devices:</span><br><span class="line">  - name: DJI-4G</span><br><span class="line">    port: /dev/ttyUSB2</span><br><span class="line">    modem_type: quectel</span><br><span class="line"></span><br><span class="line">vowifi:</span><br><span class="line">  enabled: false</span><br><span class="line"></span><br><span class="line">webhook:</span><br><span class="line">  enabled: false</span><br></pre></td></tr></table></figure>
+
+<h3 id="Docker-Compose-部署"><a href="#Docker-Compose-部署" class="headerlink" title="Docker Compose 部署"></a>Docker Compose 部署</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">services:</span><br><span class="line">  vohive:</span><br><span class="line">    image: iniwex/vohive:latest</span><br><span class="line">    container_name: vohive</span><br><span class="line">    restart: unless-stopped</span><br><span class="line">    network_mode: &quot;host&quot;</span><br><span class="line">    privileged: true</span><br><span class="line">    volumes:</span><br><span class="line">      - ./config:/app/config</span><br><span class="line">      - ./data:/app/data</span><br><span class="line">      - ./logs:/app/logs</span><br><span class="line">      - /dev:/dev</span><br><span class="line">    environment:</span><br><span class="line">      - TZ=Asia/Shanghai</span><br></pre></td></tr></table></figure>
+
+<p>关键点：</p>
+<ul>
+<li><strong><code>network_mode: &quot;host&quot;</code></strong> — 模块通过 AT 串口通信，不需要端口映射，host 模式最直接</li>
+<li><strong><code>privileged: true</code></strong> — 访问 <code>/dev/ttyUSB*</code> 需要特权模式</li>
+<li><strong>挂载 <code>/dev</code></strong> — 让容器内能访问串口设备</li>
+</ul>
+<p>启动：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">cd</span> /opt/vohive</span><br><span class="line">docker compose -f docker-compose.custom.yml pull</span><br><span class="line">docker compose -f docker-compose.custom.yml up -d</span><br></pre></td></tr></table></figure>
+
+<h3 id="验证"><a href="#验证" class="headerlink" title="验证"></a>验证</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">curl -s -o /dev/null -w <span class="string">&#x27;%&#123;http_code&#125;&#x27;</span> http://localhost:7575/</span><br><span class="line"><span class="comment"># 返回 200</span></span><br><span class="line"></span><br><span class="line">docker logs vohive | <span class="built_in">tail</span> -5</span><br></pre></td></tr></table></figure>
+
+<p>VoHive Web Dashboard 访问：<code>http://&lt;服务器IP&gt;:7575</code>，默认账号 <code>admin/admin</code>（首次登录后务必修改密码）。</p>
+<h2 id="第四步：SIM-卡状态确认"><a href="#第四步：SIM-卡状态确认" class="headerlink" title="第四步：SIM 卡状态确认"></a>第四步：SIM 卡状态确认</h2><p>部署完成后通过 AT 命令查询模块和网络状态：</p>
+<table>
+<thead>
+<tr>
+<th>项目</th>
+<th>值</th>
+<th>备注</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>模块型号</td>
+<td>Quectel QDC507 (EG25-G)</td>
+<td>硬件版本</td>
+</tr>
+<tr>
+<td>固件版本</td>
+<td>QDC507GLEFM21</td>
+<td></td>
+</tr>
+<tr>
+<td>SIM 状态</td>
+<td>READY ✅</td>
+<td>已识别</td>
+</tr>
+<tr>
+<td>运营商</td>
+<td>中国电信 (460&#x2F;11)</td>
+<td>LTE FDD</td>
+</tr>
+<tr>
+<td>网络注册</td>
+<td>已注册</td>
+<td>GPRS+EPS 双附着</td>
+</tr>
+<tr>
+<td>APN</td>
+<td>CTNET</td>
+<td>电信默认</td>
+</tr>
+<tr>
+<td>IP 地址</td>
+<td>10.40.xxx.xxx</td>
+<td>PPP 内网 IP</td>
+</tr>
+<tr>
+<td>CSQ 信号强度</td>
+<td>28&#x2F;31 ✅</td>
+<td>良好</td>
+</tr>
+<tr>
+<td>RSRP</td>
+<td>-87 dBm</td>
+<td>🟡 中等</td>
+</tr>
+<tr>
+<td>DNS</td>
+<td>61.139.2.69 &#x2F; 218.6.200.139</td>
+<td>电信 DNS</td>
+</tr>
+</tbody></table>
+<h2 id="附录：关于原作者删库"><a href="#附录：关于原作者删库" class="headerlink" title="附录：关于原作者删库"></a>附录：关于原作者删库</h2><p>就在部署完成不久后，VoHive 原作者 iniwex5 宣布「无限期停止维护」，清空了源码仓库。<code>vohive-release</code> 仓库（含预编译二进制）仍公开，但需注意后续独立部署的可能性。</p>
+<p>建议做法：</p>
+<ul>
+<li><strong>Fork 备份</strong>：将关键仓库 fork 到自己的 GitHub，确保后续可用</li>
+<li><strong>保留 Docker Hub 镜像</strong>：<code>iniwex/vohive:latest</code> 是现成的，优先使用</li>
+<li><strong>社区备份</strong>：<code>hzlmy2002/vohive-collection</code> 备份了完整源码 + 所有 Go 依赖（netlink、qqbot、euicc-go、quectel-qmi-go 等）</li>
+</ul>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>整个过程不算复杂，但有几个关键注意点：</p>
+<ol>
+<li>✅ <strong>USB 身份改写一次，永久生效</strong> — 以后再也不用管了</li>
+<li>⚠️ <strong>必须用标准内核</strong> — cloud kernel 没有 usb-serial 驱动</li>
+<li>🔑 <strong><code>crnl</code> 参数</strong> — socat 发 AT 命令必须加，否则 ERROR</li>
+<li>🐳 <strong>Docker host 网络 + privileged</strong> — 串口设备访问必备</li>
+<li>📡 <strong>模块需要 SIM 卡才能正常枚举</strong> — 无 SIM 只亮红灯</li>
+</ol>
+<p>VoHive 的 Web 界面可以发短信、管理 eSIM、开代理、接推送通知，作为 4G 模块的管理平台非常实用。下一步可以探索它的 VoWiFi 和代理池功能。</p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/DJI/" rel="tag"># DJI</a>
+              <a href="/tags/4G%E6%A8%A1%E5%9D%97/" rel="tag"># 4G模块</a>
+              <a href="/tags/VoHive/" rel="tag"># VoHive</a>
+              <a href="/tags/Quectel/" rel="tag"># Quectel</a>
+              <a href="/tags/AT%E5%91%BD%E4%BB%A4/" rel="tag"># AT命令</a>
+              <a href="/tags/%E8%87%AA%E6%89%98%E7%AE%A1/" rel="tag"># 自托管</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2026/07/01/local-llm-deployment-2026/" rel="prev" title="本地部署大模型：RX 7900 XTX + llama.cpp 全记录">
+                  <i class="fa fa-angle-left"></i> 本地部署大模型：RX 7900 XTX + llama.cpp 全记录
+                </a>
+            </div>
+            <div class="post-nav-item">
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+  <div class="copyright">
+    &copy; 
+    <span itemprop="copyrightYear">2026</span>
+    <span class="with-love">
+      <i class="fa fa-heart"></i>
+    </span>
+    <span class="author" itemprop="copyrightHolder">Elric</span>
+  </div>
+  <div class="powered-by">由 <a href="https://hexo.io/" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+  <div class="sidebar-dimmer"></div>
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up fa-lg"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+</body>
+</html>

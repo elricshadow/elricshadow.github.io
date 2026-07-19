@@ -129,16 +129,16 @@
   <nav class="site-state">
       <div class="site-state-item site-state-posts">
         <a href="/archives/">
-          <span class="site-state-item-count">10</span>
+          <span class="site-state-item-count">11</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
       <div class="site-state-item site-state-categories">
-        <span class="site-state-item-count">4</span>
+        <span class="site-state-item-count">5</span>
         <span class="site-state-item-name">分类</span>
       </div>
       <div class="site-state-item site-state-tags">
-        <span class="site-state-item-count">42</span>
+        <span class="site-state-item-count">48</span>
         <span class="site-state-item-name">标签</span>
       </div>
   </nav>
@@ -155,6 +155,220 @@
     </div>
 
     <div class="main-inner index posts-expand">
+
+    
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="">
+    <link itemprop="mainEntityOfPage" href="https://yourdomain.com/2026/07/19/2026-07-19-spectrum-imessage-hermes-bridge/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Elric">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Elric's Desk">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content=" | Elric's Desk">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          <a href="/2026/07/19/2026-07-19-spectrum-imessage-hermes-bridge/" class="post-title-link" itemprop="url">Spectrum + Hermes Agent 接入 iMessage 全記錄：從零到能用的踩坑實錄</a>
+        </h2>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+      
+
+      <time title="创建时间：2026-07-19 18:00:00 / 修改时间：13:50:24" itemprop="dateCreated datePublished" datetime="2026-07-19T18:00:00+08:00">2026-07-19</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E6%8A%80%E8%A1%93%E7%AD%86%E8%A8%98/" itemprop="url" rel="index"><span itemprop="name">技術筆記</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+          <h1 id="Spectrum-Hermes-Agent-接入-iMessage-全記錄：從零到能用的踩坑實錄"><a href="#Spectrum-Hermes-Agent-接入-iMessage-全記錄：從零到能用的踩坑實錄" class="headerlink" title="Spectrum + Hermes Agent 接入 iMessage 全記錄：從零到能用的踩坑實錄"></a>Spectrum + Hermes Agent 接入 iMessage 全記錄：從零到能用的踩坑實錄</h1><blockquote>
+<p><strong>作者</strong>: Zevon  <br><strong>日期</strong>: 2026-07-19<br><strong>標籤</strong>: <code>iMessage</code> <code>Spectrum</code> <code>Hermes Agent</code> <code>Bun</code> <code>TypeScript</code> <code>Docker</code> <code>踩坑</code></p>
+</blockquote>
+<hr>
+<h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>想把 iMessage 接入 AI 智能體？目前市面上幾乎沒有現成的方案——iMessage 是 Apple 的封閉生態，不像 Telegram&#x2F;WhatsApp 有公開 Bot API。本文記錄了使用 <strong>Photon Spectrum Cloud</strong> 雲端橋接 + <strong>Hermes Agent</strong> 的回覆引擎，完整打通 iMessage → AI 回覆的全過程，以及途中遇到的所有坑。</p>
+<hr>
+<h2 id="架構總覽"><a href="#架構總覽" class="headerlink" title="架構總覽"></a>架構總覽</h2><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">iPhone iMessage</span><br><span class="line">    ↓</span><br><span class="line">[Photon Spectrum Cloud] ← 雲端橋接，不需 Mac 長期在線</span><br><span class="line">    ↓</span><br><span class="line">[自托管服務器 /opt/spectrum-bot]</span><br><span class="line">    ├── Bun 1.3.14 運行時</span><br><span class="line">    ├── spectrum-ts@11.2.0 SDK</span><br><span class="line">    └── index.ts 自訂邏輯</span><br><span class="line">    ↓</span><br><span class="line">[Hermes Agent] ← 用 hermes -z 處理訊息並回覆</span><br><span class="line">    ↓</span><br><span class="line">iMessage 回覆送到手機</span><br></pre></td></tr></table></figure>
+
+<hr>
+<h2 id="第一步：環境準備"><a href="#第一步：環境準備" class="headerlink" title="第一步：環境準備"></a>第一步：環境準備</h2><h3 id="服務器信息"><a href="#服務器信息" class="headerlink" title="服務器信息"></a>服務器信息</h3><ul>
+<li><strong>OS</strong>: Ubuntu 22.04 (Docker 宿主機)</li>
+<li><strong>IP</strong>: YOUR_SERVER_IP</li>
+<li><strong>Hermes Agent</strong>: v0.18.2（已預裝）</li>
+<li><strong>Node.js</strong>: v22.22.2</li>
+</ul>
+<h3 id="安裝-Bun"><a href="#安裝-Bun" class="headerlink" title="安裝 Bun"></a>安裝 Bun</h3><p>Photon Spectrum 的 SDK <code>spectrum-ts</code> 官方推薦使用 Bun 運行時：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">curl -fsSL https://bun.sh/install | bash</span><br><span class="line"><span class="built_in">source</span> ~/.bashrc</span><br><span class="line">bun --version</span><br><span class="line"><span class="comment"># → 1.3.14</span></span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p><strong>坑 #1</strong>: 如果服務器之前裝過舊版 Bun，記得 <code>source ~/.bashrc</code> 或重開終端，否則 PATH 沒更新。</p>
+</blockquote>
+<hr>
+<h2 id="第二步：創建-Spectrum-Cloud-項目"><a href="#第二步：創建-Spectrum-Cloud-項目" class="headerlink" title="第二步：創建 Spectrum Cloud 項目"></a>第二步：創建 Spectrum Cloud 項目</h2><h3 id="註冊-Photon-Spectrum"><a href="#註冊-Photon-Spectrum" class="headerlink" title="註冊 Photon Spectrum"></a>註冊 Photon Spectrum</h3><p>前往 <a target="_blank" rel="noopener" href="https://app.photon.codes/">app.photon.codes</a> 註冊帳號。</p>
+<blockquote>
+<p><strong>坑 #2</strong>: 網站有 <strong>Cloudflare 人機驗證</strong>，從服務器的無頭瀏覽器很難通過！<br><strong>解決方案</strong>: 用本地瀏覽器（你的 Mac&#x2F;PC）手動訪問註冊，然後複製 Project ID 和 Secret。</p>
+</blockquote>
+<h3 id="獲取憑證"><a href="#獲取憑證" class="headerlink" title="獲取憑證"></a>獲取憑證</h3><p>註冊成功後，在 Photon Dashboard 創建一個新項目，拿到：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">SPECTRUM_PROJECT_ID=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx</span><br><span class="line">SPECTRUM_PROJECT_SECRET=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx</span><br></pre></td></tr></table></figure>
+
+<p>這兩個值就是你的 iMessage 橋接鑰匙。</p>
+<hr>
+<h2 id="第三步：初始化項目"><a href="#第三步：初始化項目" class="headerlink" title="第三步：初始化項目"></a>第三步：初始化項目</h2><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">mkdir</span> -p /opt/spectrum-bot</span><br><span class="line"><span class="built_in">cd</span> /opt/spectrum-bot</span><br><span class="line">bun init -y</span><br><span class="line">bun add spectrum-ts@11.2.0</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p><strong>坑 #3</strong>: <code>spectrum-ts</code> 會依賴 <code>@spectrum-ts/core</code>，這個庫自帶 Zod v4，而 Zod v4 的 TypeScript 類型定義和 tsc 有兼容性問題。<br><strong>現象</strong>: 跑 <code>tsc --noEmit</code> 會報 50+ 個類型錯誤。<br><strong>處理</strong>: <strong>完全忽略</strong>——Bun 運行時無視這些錯誤，能正常執行。</p>
+</blockquote>
+<h3 id="配置環境變量"><a href="#配置環境變量" class="headerlink" title="配置環境變量"></a>配置環境變量</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">cat</span> &gt; /opt/spectrum-bot/.env &lt;&lt; <span class="string">&#x27;EOF&#x27;</span></span><br><span class="line">SPECTRUM_PROJECT_ID=你的ID</span><br><span class="line">SPECTRUM_PROJECT_SECRET=你的SECRET</span><br><span class="line">EOF</span><br></pre></td></tr></table></figure>
+
+<hr>
+<h2 id="第四步：編寫-Bot（踩坑密集區）"><a href="#第四步：編寫-Bot（踩坑密集區）" class="headerlink" title="第四步：編寫 Bot（踩坑密集區）"></a>第四步：編寫 Bot（踩坑密集區）</h2><h3 id="初版：照搬-README（出事了）"><a href="#初版：照搬-README（出事了）" class="headerlink" title="初版：照搬 README（出事了）"></a>初版：照搬 README（出事了）</h3><figure class="highlight typescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// ❌ 錯誤示範 — 這份代碼不會工作</span></span><br><span class="line"><span class="keyword">for</span> <span class="title function_">await</span> (<span class="keyword">const</span> [space, message] <span class="keyword">of</span> app.<span class="property">messages</span>) &#123;</span><br><span class="line">  <span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="string">`收到: <span class="subst">$&#123;message.text&#125;</span>`</span>);             <span class="comment">// undefined</span></span><br><span class="line">  <span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="string">`來自: <span class="subst">$&#123;message.<span class="keyword">from</span>.name&#125;</span>`</span>);         <span class="comment">// undefined</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><strong>這是我們遇到的第一個重大坑。</strong></p>
+<h3 id="坑-4-message-text-不存在"><a href="#坑-4-message-text-不存在" class="headerlink" title="坑 #4: message.text 不存在"></a>坑 #4: <code>message.text</code> 不存在</h3><p>Spectrum 的 Message 類型<strong>沒有 <code>text</code> 屬性</strong>！訊息內容在 <code>message.content</code> 中。</p>
+<p>正確結構：</p>
+<figure class="highlight typescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// ✅ Message 類型 (簡化)</span></span><br><span class="line"><span class="keyword">interface</span> <span class="title class_">Message</span> &#123;</span><br><span class="line">  <span class="attr">content</span>: <span class="title class_">Content</span>;         <span class="comment">// ← 內容在這裡！</span></span><br><span class="line">  <span class="attr">sender</span>?: <span class="title class_">User</span>;            <span class="comment">// ← 不是 from！</span></span><br><span class="line">  <span class="comment">// ...</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// Content 是聯合類型</span></span><br><span class="line"><span class="keyword">interface</span> <span class="title class_">TextContent</span> &#123;</span><br><span class="line">  <span class="attr">type</span>: <span class="string">&quot;text&quot;</span>;</span><br><span class="line">  <span class="attr">text</span>: <span class="built_in">string</span>;             <span class="comment">// 文字內容在 content.text</span></span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">interface</span> <span class="title class_">MarkdownContent</span> &#123;</span><br><span class="line">  <span class="attr">type</span>: <span class="string">&quot;markdown&quot;</span>;</span><br><span class="line">  <span class="attr">markdown</span>: <span class="built_in">string</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>正確取文字：</p>
+<figure class="highlight typescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> contentType = message.<span class="property">content</span>.<span class="property">type</span>;</span><br><span class="line"><span class="keyword">const</span> text = contentType === <span class="string">&quot;text&quot;</span> ? message.<span class="property">content</span>.<span class="property">text</span></span><br><span class="line">           : contentType === <span class="string">&quot;markdown&quot;</span> ? message.<span class="property">content</span>.<span class="property">markdown</span></span><br><span class="line">           : <span class="title class_">JSON</span>.<span class="title function_">stringify</span>(message.<span class="property">content</span>);</span><br></pre></td></tr></table></figure>
+
+<h3 id="坑-5-message-from-不存在"><a href="#坑-5-message-from-不存在" class="headerlink" title="坑 #5: message.from 不存在"></a>坑 #5: <code>message.from</code> 不存在</h3><p>發送者是 <code>message.sender</code> 而不是 <code>message.from</code>。</p>
+<p>而且 User 類型非常簡潔：</p>
+<figure class="highlight typescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">interface</span> <span class="title class_">User</span> &#123;</span><br><span class="line">  <span class="keyword">readonly</span> <span class="attr">__platform</span>: <span class="built_in">string</span>;  <span class="comment">// 平台標識</span></span><br><span class="line">  <span class="keyword">readonly</span> <span class="attr">id</span>: <span class="built_in">string</span>;          <span class="comment">// 用戶 ID（iMessage 裡是電話號碼）</span></span><br><span class="line">  <span class="keyword">readonly</span> <span class="attr">kind</span>?: <span class="string">&quot;agent&quot;</span>;      <span class="comment">// 可選</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><strong>沒有 <code>name</code>、<code>displayName</code> 等字段</strong>，只有 <code>id</code>。iMessage 場景下 <code>id</code> 就是對方的手機號。</p>
+<p>正確用法：</p>
+<figure class="highlight typescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> senderId = message.<span class="property">sender</span>?.<span class="property">id</span> || <span class="string">&quot;unknown&quot;</span>;  <span class="comment">// → +852xxxxxxxx</span></span><br></pre></td></tr></table></figure>
+
+<hr>
+<h2 id="第五步：接入-Hermes-Agent（又一個坑）"><a href="#第五步：接入-Hermes-Agent（又一個坑）" class="headerlink" title="第五步：接入 Hermes Agent（又一個坑）"></a>第五步：接入 Hermes Agent（又一個坑）</h2><h3 id="坑-6-hermes-chat-q-輸出思考過程"><a href="#坑-6-hermes-chat-q-輸出思考過程" class="headerlink" title="坑 #6: hermes chat -q 輸出思考過程"></a>坑 #6: <code>hermes chat -q</code> 輸出思考過程</h3><p>一開始我用：</p>
+<figure class="highlight typescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// ❌ 錯誤</span></span><br><span class="line"><span class="keyword">const</span> reply = <span class="keyword">await</span> $<span class="string">`hermes chat -q &quot;問題&quot; -Q --cli`</span>.<span class="title function_">text</span>();</span><br></pre></td></tr></table></figure>
+
+<p>但 <code>hermes chat</code> 是交互模式，即使加上 <code>-Q</code>（安靜模式），仍然會輸出 Agent 的<strong>內部推理和工具調用計劃</strong>，而不是最終答案。</p>
+<p>實際輸出是這樣的：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">Let me search past sessions for any Messenger-related context first,</span><br><span class="line">then check what capabilities are available regarding message handling</span><br><span class="line">in Hermes Agent docs/skills to give you an accurate, grounded...</span><br></pre></td></tr></table></figure>
+
+<p>這顯然不是你想讓 iMessage 收到的回覆。</p>
+<h3 id="✅-正確方案：用-hermes-z"><a href="#✅-正確方案：用-hermes-z" class="headerlink" title="✅ 正確方案：用 hermes -z"></a>✅ 正確方案：用 <code>hermes -z</code></h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">hermes -z <span class="string">&quot;你的問題&quot;</span></span><br><span class="line"><span class="comment"># → 我叫 Hermes Agent，由 Nous Research 創造，你的智能助手。</span></span><br></pre></td></tr></table></figure>
+
+<p><code>-z</code> 是 top-level 的單輪查詢模式，直接返回純文字答案，沒有多餘輸出，速度也更快。</p>
+<p>最後的 Bot 代碼：</p>
+<figure class="highlight typescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> &#123; <span class="title class_">Spectrum</span> &#125; <span class="keyword">from</span> <span class="string">&quot;spectrum-ts&quot;</span>;</span><br><span class="line"><span class="keyword">import</span> &#123; imessage &#125; <span class="keyword">from</span> <span class="string">&quot;spectrum-ts/providers/imessage&quot;</span>;</span><br><span class="line"><span class="keyword">import</span> &#123; $ &#125; <span class="keyword">from</span> <span class="string">&quot;bun&quot;</span>;</span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> app = <span class="keyword">await</span> <span class="title class_">Spectrum</span>(&#123;</span><br><span class="line">  <span class="attr">projectId</span>: process.<span class="property">env</span>.<span class="property">SPECTRUM_PROJECT_ID</span>!,</span><br><span class="line">  <span class="attr">projectSecret</span>: process.<span class="property">env</span>.<span class="property">SPECTRUM_PROJECT_SECRET</span>!,</span><br><span class="line">  <span class="attr">providers</span>: [imessage.<span class="title function_">config</span>()],</span><br><span class="line">&#125;);</span><br><span class="line"></span><br><span class="line"><span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="string">&quot;🤖 Spectrum -&gt; Hermes iMessage bridge running...&quot;</span>);</span><br><span class="line"></span><br><span class="line"><span class="keyword">for</span> <span class="title function_">await</span> (<span class="keyword">const</span> [space, message] <span class="keyword">of</span> app.<span class="property">messages</span>) &#123;</span><br><span class="line">  <span class="keyword">await</span> space.<span class="title function_">responding</span>(<span class="title function_">async</span> () =&gt; &#123;</span><br><span class="line">    <span class="keyword">const</span> senderId = message.<span class="property">sender</span>?.<span class="property">id</span> || <span class="string">&quot;unknown&quot;</span>;</span><br><span class="line">    <span class="keyword">const</span> contentType = message.<span class="property">content</span>.<span class="property">type</span>;</span><br><span class="line">    <span class="keyword">const</span> text = contentType === <span class="string">&quot;text&quot;</span> ? message.<span class="property">content</span>.<span class="property">text</span></span><br><span class="line">               : contentType === <span class="string">&quot;markdown&quot;</span> ? message.<span class="property">content</span>.<span class="property">markdown</span></span><br><span class="line">               : <span class="title class_">JSON</span>.<span class="title function_">stringify</span>(message.<span class="property">content</span>);</span><br><span class="line"></span><br><span class="line">    <span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="string">`📩 iMessage from <span class="subst">$&#123;senderId&#125;</span>: <span class="subst">$&#123;text&#125;</span>`</span>);</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 關鍵一行：用 hermes -z 獲取 AI 回覆</span></span><br><span class="line">    <span class="keyword">const</span> hermesReply = <span class="keyword">await</span> $<span class="string">`hermes -z <span class="subst">$&#123;<span class="string">`[iMessage from <span class="subst">$&#123;senderId&#125;</span>]: <span class="subst">$&#123;text&#125;</span>`</span>&#125;</span>`</span>.<span class="title function_">text</span>();</span><br><span class="line">    <span class="keyword">const</span> cleanReply = hermesReply.<span class="title function_">trim</span>();</span><br><span class="line"></span><br><span class="line">    <span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="string">`🤖 Hermes replies: <span class="subst">$&#123;cleanReply.slice(<span class="number">0</span>, <span class="number">200</span>)&#125;</span>`</span>);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">await</span> message.<span class="title function_">reply</span>(cleanReply);</span><br><span class="line">  &#125;);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<hr>
+<h2 id="第六步：啟動和維護"><a href="#第六步：啟動和維護" class="headerlink" title="第六步：啟動和維護"></a>第六步：啟動和維護</h2><h3 id="啟動-Bot（後臺運行）"><a href="#啟動-Bot（後臺運行）" class="headerlink" title="啟動 Bot（後臺運行）"></a>啟動 Bot（後臺運行）</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">cd</span> /opt/spectrum-bot</span><br><span class="line">bun run index.ts &amp;</span><br></pre></td></tr></table></figure>
+
+<p>建議用 Hermes Agent 的 cron 或 process 管理來保持長期運行。</p>
+<h3 id="驗證是否正常"><a href="#驗證是否正常" class="headerlink" title="驗證是否正常"></a>驗證是否正常</h3><p>發送一條 iMessage 到自己的號碼，觀察 Bot 日誌：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">📩 iMessage from +852xxxxxxxx: 你好</span><br><span class="line">🤖 Hermes replies: 你好！我是 Hermes Agent，有什麼可以幫你的？</span><br></pre></td></tr></table></figure>
+
+<hr>
+<h2 id="踩坑總結"><a href="#踩坑總結" class="headerlink" title="踩坑總結"></a>踩坑總結</h2><table>
+<thead>
+<tr>
+<th>#</th>
+<th>坑</th>
+<th>錯誤寫法</th>
+<th>正確寫法</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>1</td>
+<td>類型錯誤（Zod v4）</td>
+<td>試圖修復 tsc 錯誤</td>
+<td>忽略，Bun 能跑</td>
+</tr>
+<tr>
+<td>2</td>
+<td>Cloudflare 驗證</td>
+<td>用服務器瀏覽器註冊</td>
+<td>本地瀏覽器手動註冊</td>
+</tr>
+<tr>
+<td>3</td>
+<td><code>message.text</code></td>
+<td>直接取 text</td>
+<td><code>message.content.text</code></td>
+</tr>
+<tr>
+<td>4</td>
+<td><code>message.from</code></td>
+<td><code>message.from.name</code></td>
+<td><code>message.sender?.id</code></td>
+</tr>
+<tr>
+<td>5</td>
+<td>User 無 name</td>
+<td><code>message.sender.name</code></td>
+<td>只用 <code>sender.id</code></td>
+</tr>
+<tr>
+<td>6</td>
+<td>Hermes 輸出推理過程</td>
+<td><code>hermes chat -q</code></td>
+<td><code>hermes -z</code></td>
+</tr>
+</tbody></table>
+<hr>
+<h2 id="結語"><a href="#結語" class="headerlink" title="結語"></a>結語</h2><p>打通 iMessage + AI 的鏈路雖然折騰，但一旦跑通，體驗非常順暢。Photon Spectrum Cloud 解決了 iMessage 橋接最頭痛的「需要 Mac 長期在線」問題，而 Hermes Agent 提供了強大的 AI 處理能力。</p>
+<p>後續可以擴展的功能：</p>
+<ul>
+<li>多輪對話上下文（用 <code>hermes --resume</code> 保持 session）</li>
+<li>指令系統（特定前綴觸發不同技能）</li>
+<li>圖片&#x2F;附件處理</li>
+</ul>
+<hr>
+<p><em>如果你也遇到了類似問題，或者有更好的方案，歡迎交流討論！</em></p>
+
+      
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+</div>
+
+
+
 
     
 
@@ -200,7 +414,7 @@
         <i class="far fa-calendar-check"></i>
       </span>
       <span class="post-meta-item-text">更新于</span>
-      <time title="修改时间：2026-07-19 13:35:00" itemprop="dateModified" datetime="2026-07-19T13:35:00+08:00">2026-07-19</time>
+      <time title="修改时间：2026-07-19 13:50:24" itemprop="dateModified" datetime="2026-07-19T13:50:24+08:00">2026-07-19</time>
     </span>
     <span class="post-meta-item">
       <span class="post-meta-item-icon">
@@ -620,7 +834,7 @@
         <i class="far fa-calendar-check"></i>
       </span>
       <span class="post-meta-item-text">更新于</span>
-      <time title="修改时间：2026-07-19 13:35:00" itemprop="dateModified" datetime="2026-07-19T13:35:00+08:00">2026-07-19</time>
+      <time title="修改时间：2026-07-19 13:50:24" itemprop="dateModified" datetime="2026-07-19T13:50:24+08:00">2026-07-19</time>
     </span>
     <span class="post-meta-item">
       <span class="post-meta-item-icon">
@@ -1024,7 +1238,7 @@
         <i class="far fa-calendar-check"></i>
       </span>
       <span class="post-meta-item-text">更新于</span>
-      <time title="修改时间：2026-07-19 13:35:00" itemprop="dateModified" datetime="2026-07-19T13:35:00+08:00">2026-07-19</time>
+      <time title="修改时间：2026-07-19 13:50:24" itemprop="dateModified" datetime="2026-07-19T13:50:24+08:00">2026-07-19</time>
     </span>
     <span class="post-meta-item">
       <span class="post-meta-item-icon">
@@ -1154,7 +1368,7 @@
         <i class="far fa-calendar-check"></i>
       </span>
       <span class="post-meta-item-text">更新于</span>
-      <time title="修改时间：2026-07-19 13:35:00" itemprop="dateModified" datetime="2026-07-19T13:35:00+08:00">2026-07-19</time>
+      <time title="修改时间：2026-07-19 13:50:24" itemprop="dateModified" datetime="2026-07-19T13:50:24+08:00">2026-07-19</time>
     </span>
     <span class="post-meta-item">
       <span class="post-meta-item-icon">
@@ -1247,7 +1461,7 @@
         <i class="far fa-calendar-check"></i>
       </span>
       <span class="post-meta-item-text">更新于</span>
-      <time title="修改时间：2026-07-19 13:35:00" itemprop="dateModified" datetime="2026-07-19T13:35:00+08:00">2026-07-19</time>
+      <time title="修改时间：2026-07-19 13:50:24" itemprop="dateModified" datetime="2026-07-19T13:50:24+08:00">2026-07-19</time>
     </span>
     <span class="post-meta-item">
       <span class="post-meta-item-icon">
@@ -1339,7 +1553,7 @@
         <i class="far fa-calendar-check"></i>
       </span>
       <span class="post-meta-item-text">更新于</span>
-      <time title="修改时间：2026-07-19 13:35:00" itemprop="dateModified" datetime="2026-07-19T13:35:00+08:00">2026-07-19</time>
+      <time title="修改时间：2026-07-19 13:50:24" itemprop="dateModified" datetime="2026-07-19T13:50:24+08:00">2026-07-19</time>
     </span>
     <span class="post-meta-item">
       <span class="post-meta-item-icon">
@@ -1432,7 +1646,7 @@
         <i class="far fa-calendar-check"></i>
       </span>
       <span class="post-meta-item-text">更新于</span>
-      <time title="修改时间：2026-07-19 13:35:00" itemprop="dateModified" datetime="2026-07-19T13:35:00+08:00">2026-07-19</time>
+      <time title="修改时间：2026-07-19 13:50:24" itemprop="dateModified" datetime="2026-07-19T13:50:24+08:00">2026-07-19</time>
     </span>
     <span class="post-meta-item">
       <span class="post-meta-item-icon">
@@ -1524,7 +1738,7 @@
         <i class="far fa-calendar-check"></i>
       </span>
       <span class="post-meta-item-text">更新于</span>
-      <time title="修改时间：2026-07-19 13:35:00" itemprop="dateModified" datetime="2026-07-19T13:35:00+08:00">2026-07-19</time>
+      <time title="修改时间：2026-07-19 13:50:24" itemprop="dateModified" datetime="2026-07-19T13:50:24+08:00">2026-07-19</time>
     </span>
     <span class="post-meta-item">
       <span class="post-meta-item-icon">
@@ -1572,94 +1786,9 @@
 
 
 
-    
-
-
-<div class="post-block">
-  
-  
-
-  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="">
-    <link itemprop="mainEntityOfPage" href="https://yourdomain.com/2025/12/21/hello-world/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="Elric">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Elric's Desk">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
-      <meta itemprop="name" content=" | Elric's Desk">
-      <meta itemprop="description" content="">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          <a href="/2025/12/21/hello-world/" class="post-title-link" itemprop="url">Hello World</a>
-        </h2>
-
-        <div class="post-meta-container">
-          <div class="post-meta">
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-calendar"></i>
-      </span>
-      <span class="post-meta-item-text">发表于</span>
-
-      <time title="创建时间：2025-12-22 00:00:00" itemprop="dateCreated datePublished" datetime="2025-12-22T00:00:00+08:00">2025-12-22</time>
-    </span>
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-calendar-check"></i>
-      </span>
-      <span class="post-meta-item-text">更新于</span>
-      <time title="修改时间：2026-07-19 13:35:00" itemprop="dateModified" datetime="2026-07-19T13:35:00+08:00">2026-07-19</time>
-    </span>
-
-  
-</div>
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-          <p>Welcome to <a target="_blank" rel="noopener" href="https://hexo.io/">Hexo</a>! This is your very first post. Check <a target="_blank" rel="noopener" href="https://hexo.io/docs/">documentation</a> for more info. If you get any problems when using Hexo, you can find the answer in <a target="_blank" rel="noopener" href="https://hexo.io/docs/troubleshooting.html">troubleshooting</a> or you can ask me on <a target="_blank" rel="noopener" href="https://github.com/hexojs/hexo/issues">GitHub</a>.</p>
-<h2 id="Quick-Start"><a href="#Quick-Start" class="headerlink" title="Quick Start"></a>Quick Start</h2><h3 id="Create-a-new-post"><a href="#Create-a-new-post" class="headerlink" title="Create a new post"></a>Create a new post</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo new <span class="string">&quot;My New Post&quot;</span></span><br></pre></td></tr></table></figure>
-
-<p>More info: <a target="_blank" rel="noopener" href="https://hexo.io/docs/writing.html">Writing</a></p>
-<h3 id="Run-server"><a href="#Run-server" class="headerlink" title="Run server"></a>Run server</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo server</span><br></pre></td></tr></table></figure>
-
-<p>More info: <a target="_blank" rel="noopener" href="https://hexo.io/docs/server.html">Server</a></p>
-<h3 id="Generate-static-files"><a href="#Generate-static-files" class="headerlink" title="Generate static files"></a>Generate static files</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo generate</span><br></pre></td></tr></table></figure>
-
-<p>More info: <a target="_blank" rel="noopener" href="https://hexo.io/docs/generating.html">Generating</a></p>
-<h3 id="Deploy-to-remote-sites"><a href="#Deploy-to-remote-sites" class="headerlink" title="Deploy to remote sites"></a>Deploy to remote sites</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo deploy</span><br></pre></td></tr></table></figure>
-
-<p>More info: <a target="_blank" rel="noopener" href="https://hexo.io/docs/one-command-deployment.html">Deployment</a></p>
-
-      
-    </div>
-
-    
-    
-    
-
-    <footer class="post-footer">
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-</div>
-
-
-
-
+  <nav class="pagination">
+    <span class="page-number current">1</span><a class="page-number" href="/page/2/">2</a><a class="extend next" rel="next" title="下一页" aria-label="下一页" href="/page/2/"><i class="fa fa-angle-right"></i></a>
+  </nav>
 
 </div>
   </main>

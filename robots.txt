@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+
+# Sitemap
+Sitemap: https://elric.top/sitemap.xml
+
+# No private or system files
+Disallow: /cgi-bin/

@@ -19,32 +19,31 @@
 
 <script class="next-config" data-name="main" type="application/json">{"hostname":"elric.top","root":"/","images":"/images","scheme":"Gemini","darkmode":false,"version":"8.26.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"post","padding":18,"offset":12},"hljswrap":true,"codeblock":{"theme":{"light":"default","dark":"stackoverflow-dark"},"prism":{"light":"prism","dark":"prism-dark"},"copy_button":{"enable":false,"style":null},"fold":{"enable":false,"height":500},"language":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"duration":200,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"}}</script><script src="/js/config.js" defer></script>
 
-    <meta name="description" content="上一篇把 Qwen3.6 27B 跑在了 RX 7900 XTX 上，这套本地推理栈已经稳定服役了一段时间。这一篇记录三件事：  把本地模型从 Qwen3.6 27B 升级到 Qwen3.8 27B —— 几乎零成本，换个模型文件、改个配置就行。 接入 DeepSeek Harness（dsh） —— 一个把本地模型包装成可用 Agent 编排层的开源框架，踩了 403 信任栅栏的坑。 用 Clo">
+    <meta name="description" content="上一篇把 Qwen3.6 27B 跑在了 RX 7900 XTX 上，这套本地推理栈稳定跑了一段时间。这篇记三件事：模型升到 Qwen3.8 27B、接入 DeepSeek Harness（dsh）、再用 Cloudflare Tunnel + Access 把 Agent 安全开到公网。 一、Qwen3.6 27B 升 Qwen3.8 27B升级最省事。整套链路是 OpenAI 兼容 API，模">
 <meta property="og:type" content="article">
-<meta property="og:title" content="本地大模型升级 Qwen3.8 27B + DeepSeek Harness 接入 + Cloudflare 安全公网">
+<meta property="og:title" content="本地大模型升级 Qwen3.8 27B，接入 DeepSeek Harness，用 Cloudflare 开到公网">
 <meta property="og:url" content="https://elric.top/2026/08/18/dsh-local-llm-cf-access-2026/index.html">
 <meta property="og:site_name" content="Elric&#39;s Desk">
-<meta property="og:description" content="上一篇把 Qwen3.6 27B 跑在了 RX 7900 XTX 上，这套本地推理栈已经稳定服役了一段时间。这一篇记录三件事：  把本地模型从 Qwen3.6 27B 升级到 Qwen3.8 27B —— 几乎零成本，换个模型文件、改个配置就行。 接入 DeepSeek Harness（dsh） —— 一个把本地模型包装成可用 Agent 编排层的开源框架，踩了 403 信任栅栏的坑。 用 Clo">
+<meta property="og:description" content="上一篇把 Qwen3.6 27B 跑在了 RX 7900 XTX 上，这套本地推理栈稳定跑了一段时间。这篇记三件事：模型升到 Qwen3.8 27B、接入 DeepSeek Harness（dsh）、再用 Cloudflare Tunnel + Access 把 Agent 安全开到公网。 一、Qwen3.6 27B 升 Qwen3.8 27B升级最省事。整套链路是 OpenAI 兼容 API，模">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2026-08-18T16:00:00.000Z">
-<meta property="article:modified_time" content="2026-08-19T12:21:13.024Z">
+<meta property="article:modified_time" content="2026-08-21T22:16:02.093Z">
 <meta property="article:author" content="Elric">
 <meta property="article:tag" content="Cloudflare">
 <meta property="article:tag" content="DeepSeek Harness">
 <meta property="article:tag" content="llama.cpp">
 <meta property="article:tag" content="大模型">
 <meta property="article:tag" content="自部署">
-<meta property="article:tag" content="踩坑">
 <meta name="twitter:card" content="summary">
 
 
 <link rel="canonical" href="https://elric.top/2026/08/18/dsh-local-llm-cf-access-2026/">
 
 
-<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://elric.top/2026/08/18/dsh-local-llm-cf-access-2026/","path":"2026/08/18/dsh-local-llm-cf-access-2026/","title":"本地大模型升级 Qwen3.8 27B + DeepSeek Harness 接入 + Cloudflare 安全公网"}</script>
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://elric.top/2026/08/18/dsh-local-llm-cf-access-2026/","path":"2026/08/18/dsh-local-llm-cf-access-2026/","title":"本地大模型升级 Qwen3.8 27B，接入 DeepSeek Harness，用 Cloudflare 开到公网"}</script>
 
 <script class="next-config" data-name="calendar" type="application/json">""</script>
-<title>本地大模型升级 Qwen3.8 27B + DeepSeek Harness 接入 + Cloudflare 安全公网 | Elric's Desk</title>
+<title>本地大模型升级 Qwen3.8 27B，接入 DeepSeek Harness，用 Cloudflare 开到公网 | Elric's Desk</title>
   
 
 
@@ -134,7 +133,7 @@
       <div class="sidebar-panel-container">
         <!--noindex-->
         <div class="post-toc-wrap sidebar-panel">
-            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%F0%9F%A7%A0-%E4%B8%80%E3%80%81Qwen3-6-27B-%E2%86%92-Qwen3-8-27B"><span class="nav-number">1.</span> <span class="nav-text">🧠 一、Qwen3.6 27B → Qwen3.8 27B</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-%E6%8D%A2%E6%A8%A1%E5%9E%8B%E6%96%87%E4%BB%B6"><span class="nav-number">1.1.</span> <span class="nav-text">1. 换模型文件</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-%E9%87%8D%E5%90%AF-llama-server"><span class="nav-number">1.2.</span> <span class="nav-text">2. 重启 llama-server</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-%E4%B8%8A%E5%B1%82%E5%AE%A2%E6%88%B7%E7%AB%AF%E5%8F%AA%E9%9C%80%E6%94%B9-alias"><span class="nav-number">1.3.</span> <span class="nav-text">3. 上层客户端只需改 alias</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%F0%9F%A4%96-%E4%BA%8C%E3%80%81%E6%8E%A5%E5%85%A5-DeepSeek-Harness%EF%BC%88dsh%EF%BC%89"><span class="nav-number">2.</span> <span class="nav-text">🤖 二、接入 DeepSeek Harness（dsh）</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-%E5%85%B3%E9%94%AE%E5%9D%91%EF%BC%9Adsh-%E5%8F%AA%E7%BB%91-127-0-0-1"><span class="nav-number">2.1.</span> <span class="nav-text">1. 关键坑：dsh 只绑 127.0.0.1</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-%E6%9C%80%E5%A4%A7%E5%9D%91%EF%BC%9A%E6%B5%8F%E8%A7%88%E5%99%A8%E4%BF%A1%E4%BB%BB-403-%E6%A0%85%E6%A0%8F"><span class="nav-number">2.2.</span> <span class="nav-text">2. 最大坑：浏览器信任 403 栅栏</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-%E9%9A%90%E5%BD%A2%E5%9D%91%EF%BC%9Abind-mount-%E7%9A%84-inode-%E9%99%88%E6%97%A7"><span class="nav-number">2.3.</span> <span class="nav-text">3. 隐形坑：bind mount 的 inode 陈旧</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-%E9%85%8D%E7%BD%AE-provider%EF%BC%88in-container%EF%BC%89"><span class="nav-number">2.4.</span> <span class="nav-text">4. 配置 provider（in-container）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#5-%E5%89%8D%E7%AB%AF%E5%B0%8F%E5%9D%91%EF%BC%9Acrypto-randomUUID-polyfill"><span class="nav-number">2.5.</span> <span class="nav-text">5. 前端小坑：crypto.randomUUID polyfill</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#6-%E9%AA%8C%E8%AF%81%E6%B8%85%E5%8D%95%EF%BC%88%E5%85%A8%E8%BF%87%E6%89%8D%E7%AE%97%E6%88%90%E5%8A%9F%EF%BC%89"><span class="nav-number">2.6.</span> <span class="nav-text">6. 验证清单（全过才算成功）</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%F0%9F%94%90-%E4%B8%89%E3%80%81Cloudflare-%E5%AE%89%E5%85%A8%E5%85%AC%E7%BD%91%EF%BC%88Tunnel-Access%EF%BC%89"><span class="nav-number">3.</span> <span class="nav-text">🔐 三、Cloudflare 安全公网（Tunnel + Access）</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%9E%B6%E6%9E%84"><span class="nav-number">3.1.</span> <span class="nav-text">架构</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%88%9B%E5%BB%BA-Access-%E5%BA%94%E7%94%A8%EF%BC%88Zero-Trust-%E6%8E%A7%E5%88%B6%E5%8F%B0%EF%BC%89"><span class="nav-number">3.2.</span> <span class="nav-text">创建 Access 应用（Zero Trust 控制台）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%AB%AF%E5%88%B0%E7%AB%AF%E9%AA%8C%E8%AF%81"><span class="nav-number">3.3.</span> <span class="nav-text">端到端验证</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%F0%9F%93%9D-%E6%80%BB%E7%BB%93"><span class="nav-number">4.</span> <span class="nav-text">📝 总结</span></a></li></ol></div>
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%80%E3%80%81Qwen3-6-27B-%E5%8D%87-Qwen3-8-27B"><span class="nav-number">1.</span> <span class="nav-text">一、Qwen3.6 27B 升 Qwen3.8 27B</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%8D%A2%E6%A8%A1%E5%9E%8B%E6%96%87%E4%BB%B6"><span class="nav-number">1.1.</span> <span class="nav-text">换模型文件</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%87%8D%E5%90%AF-llama-server"><span class="nav-number">1.2.</span> <span class="nav-text">重启 llama-server</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%8A%E5%B1%82%E5%AE%A2%E6%88%B7%E7%AB%AF%E6%94%B9-alias"><span class="nav-number">1.3.</span> <span class="nav-text">上层客户端改 alias</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BA%8C%E3%80%81%E6%8E%A5%E5%85%A5-DeepSeek-Harness%EF%BC%88dsh%EF%BC%89"><span class="nav-number">2.</span> <span class="nav-text">二、接入 DeepSeek Harness（dsh）</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#dsh-%E5%8F%AA%E7%BB%91-127-0-0-1"><span class="nav-number">2.1.</span> <span class="nav-text">dsh 只绑 127.0.0.1</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%B5%8F%E8%A7%88%E5%99%A8%E4%BF%A1%E4%BB%BB-403"><span class="nav-number">2.2.</span> <span class="nav-text">浏览器信任 403</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#bind-mount-%E7%9A%84-inode-%E9%99%88%E6%97%A7"><span class="nav-number">2.3.</span> <span class="nav-text">bind mount 的 inode 陈旧</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%85%8D%E7%BD%AE-provider%EF%BC%88in-container%EF%BC%89"><span class="nav-number">2.4.</span> <span class="nav-text">配置 provider（in-container）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%89%8D%E7%AB%AF%E5%B0%8F%E5%9D%91%EF%BC%9Acrypto-randomUUID"><span class="nav-number">2.5.</span> <span class="nav-text">前端小坑：crypto.randomUUID</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%AA%8C%E8%AF%81%E6%B8%85%E5%8D%95%EF%BC%88%E5%85%A8%E8%BF%87%E6%89%8D%E7%AE%97%E6%88%90%E5%8A%9F%EF%BC%89"><span class="nav-number">2.6.</span> <span class="nav-text">验证清单（全过才算成功）</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%89%E3%80%81Cloudflare-%E5%AE%89%E5%85%A8%E5%85%AC%E7%BD%91%EF%BC%88Tunnel-Access%EF%BC%89"><span class="nav-number">3.</span> <span class="nav-text">三、Cloudflare 安全公网（Tunnel + Access）</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%9E%B6%E6%9E%84"><span class="nav-number">3.1.</span> <span class="nav-text">架构</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%88%9B%E5%BB%BA-Access-%E5%BA%94%E7%94%A8%EF%BC%88Zero-Trust-%E6%8E%A7%E5%88%B6%E5%8F%B0%EF%BC%89"><span class="nav-number">3.2.</span> <span class="nav-text">创建 Access 应用（Zero Trust 控制台）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%AB%AF%E5%88%B0%E7%AB%AF%E9%AA%8C%E8%AF%81"><span class="nav-number">3.3.</span> <span class="nav-text">端到端验证</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%80%BB%E7%BB%93"><span class="nav-number">4.</span> <span class="nav-text">总结</span></a></li></ol></div>
         </div>
         <!--/noindex-->
 
@@ -196,12 +195,12 @@
     </span>
 
     <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
-      <meta itemprop="name" content="本地大模型升级 Qwen3.8 27B + DeepSeek Harness 接入 + Cloudflare 安全公网 | Elric's Desk">
+      <meta itemprop="name" content="本地大模型升级 Qwen3.8 27B，接入 DeepSeek Harness，用 Cloudflare 开到公网 | Elric's Desk">
       <meta itemprop="description" content="">
     </span>
       <header class="post-header">
         <h1 class="post-title" itemprop="name headline">
-          本地大模型升级 Qwen3.8 27B + DeepSeek Harness 接入 + Cloudflare 安全公网
+          本地大模型升级 Qwen3.8 27B，接入 DeepSeek Harness，用 Cloudflare 开到公网
         </h1>
 
         <div class="post-meta-container">
@@ -211,9 +210,15 @@
         <i class="far fa-calendar"></i>
       </span>
       <span class="post-meta-item-text">发表于</span>
-      
 
-      <time title="创建时间：2026-08-19 00:00:00 / 修改时间：20:21:13" itemprop="dateCreated datePublished" datetime="2026-08-19T00:00:00+08:00">2026-08-19</time>
+      <time title="创建时间：2026-08-19 00:00:00" itemprop="dateCreated datePublished" datetime="2026-08-19T00:00:00+08:00">2026-08-19</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
+      </span>
+      <span class="post-meta-item-text">更新于</span>
+      <time title="修改时间：2026-08-22 06:16:02" itemprop="dateModified" datetime="2026-08-22T06:16:02+08:00">2026-08-22</time>
     </span>
     <span class="post-meta-item">
       <span class="post-meta-item-icon">
@@ -234,33 +239,25 @@
     
     
     
-    <div class="post-body" itemprop="articleBody"><p>上一篇把 Qwen3.6 27B 跑在了 RX 7900 XTX 上，这套本地推理栈已经稳定服役了一段时间。这一篇记录三件事：</p>
-<ol>
-<li><strong>把本地模型从 Qwen3.6 27B 升级到 Qwen3.8 27B</strong> —— 几乎零成本，换个模型文件、改个配置就行。</li>
-<li><strong>接入 DeepSeek Harness（dsh）</strong> —— 一个把本地模型包装成可用 Agent 编排层的开源框架，踩了 403 信任栅栏的坑。</li>
-<li><strong>用 Cloudflare Tunnel + Access 把 Agent 安全地开到公网</strong> —— 不开放入站端口，前面挂一层真正的登录墙。</li>
-</ol>
-<h2 id="🧠-一、Qwen3-6-27B-→-Qwen3-8-27B"><a href="#🧠-一、Qwen3-6-27B-→-Qwen3-8-27B" class="headerlink" title="🧠 一、Qwen3.6 27B → Qwen3.8 27B"></a>🧠 一、Qwen3.6 27B → Qwen3.8 27B</h2><p>升级本身是最省事的部分。因为整套链路都是 <strong>OpenAI 兼容 API</strong>，模型换代对上层客户端几乎透明。</p>
-<h3 id="1-换模型文件"><a href="#1-换模型文件" class="headerlink" title="1. 换模型文件"></a>1. 换模型文件</h3><p>新模型同样选 <strong>abliterated</strong>（去拒绝化）版本 + <strong>Q4_K_M</strong> 量化：</p>
+    <div class="post-body" itemprop="articleBody"><p>上一篇把 Qwen3.6 27B 跑在了 RX 7900 XTX 上，这套本地推理栈稳定跑了一段时间。这篇记三件事：模型升到 Qwen3.8 27B、接入 DeepSeek Harness（dsh）、再用 Cloudflare Tunnel + Access 把 Agent 安全开到公网。</p>
+<h2 id="一、Qwen3-6-27B-升-Qwen3-8-27B"><a href="#一、Qwen3-6-27B-升-Qwen3-8-27B" class="headerlink" title="一、Qwen3.6 27B 升 Qwen3.8 27B"></a>一、Qwen3.6 27B 升 Qwen3.8 27B</h2><p>升级最省事。整套链路是 OpenAI 兼容 API，模型换代对上层客户端基本透明。</p>
+<h3 id="换模型文件"><a href="#换模型文件" class="headerlink" title="换模型文件"></a>换模型文件</h3><p>新模型同样选 abliterated（去拒绝化）版本 + Q4_K_M 量化：</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">模型文件: huihui-qwen3.8-27b-abliterated-q4_k_m.gguf</span><br><span class="line">大小: ~16.8GB</span><br><span class="line">量化: Q4_K_M（4-bit 混合精度）</span><br><span class="line">上下文: 64K</span><br></pre></td></tr></table></figure>
 
-<p>27B 参数、Q4_K_M 量化、16.8GB 体积，在 24GB 显存上依然安全 —— 沿用上一篇算好的显存预算（模型 ~16.8GB + KV cache q8_0 64K ~3.8GB + ROCm 开销 ~1-2GB ≈ 22-23GB），不需要重新调参。</p>
-<h3 id="2-重启-llama-server"><a href="#2-重启-llama-server" class="headerlink" title="2. 重启 llama-server"></a>2. 重启 llama-server</h3><p>只需把服务指向新文件、改个 alias：</p>
+<p>27B、Q4_K_M、16.8GB，放在 24GB 显存上仍然安全，沿用上一篇算好的预算（模型 ~16.8GB + KV cache q8_0 64K ~3.8GB + ROCm 开销 ~1-2GB，约 22-23GB），不用重新调参。</p>
+<h3 id="重启-llama-server"><a href="#重启-llama-server" class="headerlink" title="重启 llama-server"></a>重启 llama-server</h3><p>服务指向新文件、改下 alias：</p>
 <figure class="highlight ini"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># /etc/systemd/system/llama.service（节选）</span></span><br><span class="line"><span class="attr">ExecStart</span>=/home/elric/llama.cpp/build/bin/llama-server \</span><br><span class="line">  -m /home/elric/llama.cpp/models/huihui-qwen3.8-27b-abliterated-q4_k_m.gguf \</span><br><span class="line">  --alias qwen3.8-27b \</span><br><span class="line">  --host 0.0.0.0 \</span><br><span class="line">  --port 1234 \</span><br><span class="line">  -ngl 99 \</span><br><span class="line">  --flash-attn on \</span><br><span class="line">  --ctx-size 65536 \</span><br><span class="line">  -ctk q8_0 \</span><br><span class="line">  -ctv q8_0 \</span><br><span class="line">  --jinja</span><br></pre></td></tr></table></figure>
 
 <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">sudo</span> systemctl restart llama.service</span><br><span class="line"><span class="comment"># 确认模型已加载</span></span><br><span class="line">curl http://localhost:1234/v1/models</span><br></pre></td></tr></table></figure>
 
-<h3 id="3-上层客户端只需改-alias"><a href="#3-上层客户端只需改-alias" class="headerlink" title="3. 上层客户端只需改 alias"></a>3. 上层客户端只需改 alias</h3><p>因为用的是 OpenAI 兼容端点 <code>http://localhost:1234/v1</code>，Hermes Agent 的 custom provider 里把 <code>model</code> 字段从 <code>qwen3.6-27b</code> 改成 <code>qwen3.8-27b</code> 即可，baseURL、apiKey 都不用动。</p>
-<p><strong>升级成本总结：</strong> 一个模型文件 + 一行 alias。这就是 OpenAI 兼容 API 的好处 —— 模型层可以独立迭代，上层无感。</p>
-<h2 id="🤖-二、接入-DeepSeek-Harness（dsh）"><a href="#🤖-二、接入-DeepSeek-Harness（dsh）" class="headerlink" title="🤖 二、接入 DeepSeek Harness（dsh）"></a>🤖 二、接入 DeepSeek Harness（dsh）</h2><p><a target="_blank" rel="noopener" href="https://github.com/deepseek-ai/dsh">dsh</a> 是 DeepSeek 开源的 <strong>Agent 编排框架</strong>（TypeScript，MIT，开发者预览版 —— 会有 breaking changes）。它不是推理引擎，而是一个编排层：工具、会话、沙箱、UI。本地模型（llama.cpp &#x2F; vLLM）作为 OpenAI 兼容 provider 插进来。</p>
+<h3 id="上层客户端改-alias"><a href="#上层客户端改-alias" class="headerlink" title="上层客户端改 alias"></a>上层客户端改 alias</h3><p>端点是 OpenAI 兼容的 <code>http://localhost:1234/v1</code>，Hermes Agent 的 custom provider 里把 model 字段从 <code>qwen3.6-27b</code> 改成 <code>qwen3.8-27b</code> 就行，baseURL、apiKey 都不用动。</p>
+<p>升级成本：一个模型文件 + 一行 alias。OpenAI 兼容 API 的好处就在这，模型层可以独立迭代，上层无感。</p>
+<h2 id="二、接入-DeepSeek-Harness（dsh）"><a href="#二、接入-DeepSeek-Harness（dsh）" class="headerlink" title="二、接入 DeepSeek Harness（dsh）"></a>二、接入 DeepSeek Harness（dsh）</h2><p><a target="_blank" rel="noopener" href="https://github.com/deepseek-ai/dsh">dsh</a> 是 DeepSeek 开源的 Agent 编排框架（TypeScript，MIT，开发者预览版，会有 breaking changes）。它不是推理引擎，是编排层：工具、会话、沙箱、UI。本地模型（llama.cpp &#x2F; vLLM）作为 OpenAI 兼容 provider 插进来。</p>
 <blockquote>
-<p>⚠️ dsh 目前还在 <code>0.1.0-rc</code> 阶段，接口和配置会频繁变动。生产使用建议锁版本。</p>
+<p>dsh 还在 <code>0.1.0-rc</code> 阶段，接口和配置会频繁变动，生产用建议锁版本。</p>
 </blockquote>
-<h3 id="1-关键坑：dsh-只绑-127-0-0-1"><a href="#1-关键坑：dsh-只绑-127-0-0-1" class="headerlink" title="1. 关键坑：dsh 只绑 127.0.0.1"></a>1. 关键坑：dsh 只绑 127.0.0.1</h3><p>dsh 出于安全考虑<strong>拒绝 <code>--host 0.0.0.0</code></strong>，只能绑到 <code>127.0.0.1</code>。但我想在局域网&#x2F;公网访问它的 Web UI。标准解法是：</p>
-<blockquote>
-<p><strong>dsh 跑内部端口 + nginx 代理对外端口。</strong></p>
-</blockquote>
-<p>两个容器（1Panel 风格编排）：</p>
+<h3 id="dsh-只绑-127-0-0-1"><a href="#dsh-只绑-127-0-0-1" class="headerlink" title="dsh 只绑 127.0.0.1"></a>dsh 只绑 127.0.0.1</h3><p>dsh 出于安全考虑拒绝 <code>--host 0.0.0.0</code>，只能绑 <code>127.0.0.1</code>。但我想在局域网&#x2F;公网访问它的 Web UI。解法：dsh 跑内部端口，nginx 代理对外端口。</p>
+<p>两个容器（compose 编排）：</p>
 <table>
 <thead>
 <tr>
@@ -277,98 +274,94 @@
 <tr>
 <td><code>dsh-proxy</code></td>
 <td>nginx</td>
-<td>对外 <code>192.168.x.x:3080</code> → 转发到 <code>127.0.0.1:3081</code></td>
+<td>对外 <code>192.168.x.x:3080</code>，转发到 <code>127.0.0.1:3081</code></td>
 </tr>
 </tbody></table>
 <p>dsh 启动命令：</p>
 <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">node --expose-internals /usr/local/bin/dsh web \</span><br><span class="line">  --port 3081 \</span><br><span class="line">  --trusted-host 192.168.x.x:3080 \</span><br><span class="line">  --trusted-host 192.168.x.x</span><br></pre></td></tr></table></figure>
 
-<h3 id="2-最大坑：浏览器信任-403-栅栏"><a href="#2-最大坑：浏览器信任-403-栅栏" class="headerlink" title="2. 最大坑：浏览器信任 403 栅栏"></a>2. 最大坑：浏览器信任 403 栅栏</h3><p>这是 setup 里最折磨的一段，<strong>nginx 改了 4 次才搞定</strong>。</p>
-<p>dsh 对特权 RPC 方法（如 <code>settings.describe</code>）有一道 <code>isTrustedApiRequest</code> 信任栅栏，要求<strong>同时满足</strong>：</p>
+<h3 id="浏览器信任-403"><a href="#浏览器信任-403" class="headerlink" title="浏览器信任 403"></a>浏览器信任 403</h3><p>setup 里最磨人的一段，nginx 改了 4 次才搞定。</p>
+<p>dsh 对特权 RPC 方法（比如 <code>settings.describe</code>）有一道 <code>isTrustedApiRequest</code> 信任栅栏，要求同时满足：</p>
 <ol>
 <li><code>Host</code> 头是 loopback</li>
 <li><code>sec-fetch-site</code> 不是 cross-site</li>
-<li><code>Origin</code> 的 host &#x3D;&#x3D; <code>Host</code> 的 host</li>
+<li><code>Origin</code> 的 host 等于 <code>Host</code> 的 host</li>
 </ol>
-<p>请求经过 nginx 后，<code>Host</code> 和 <code>Origin</code> 变成了公网地址，栅栏判定失败 → <strong>403</strong>。</p>
-<p><strong>修复：</strong> 在 nginx 的 <code>/api/</code> location 里把 <code>Host</code> 和 <code>Origin</code> 都重写成 loopback：</p>
+<p>请求过一遍 nginx 后，<code>Host</code> 和 <code>Origin</code> 变成了公网地址，栅栏判定失败，403。</p>
+<p>修复：在 nginx 的 <code>/api/</code> location 里把 <code>Host</code> 和 <code>Origin</code> 都重写成 loopback：</p>
 <figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">location</span> /api/ &#123;</span><br><span class="line">    <span class="attribute">proxy_pass</span> http://127.0.0.1:3081;</span><br><span class="line">    <span class="attribute">proxy_set_header</span> Host <span class="number">127.0.0.1:3081</span>;</span><br><span class="line">    <span class="attribute">proxy_set_header</span> Origin http://127.0.0.1:3081;</span><br><span class="line">    <span class="attribute">proxy_set_header</span> X-Forwarded-Host <span class="variable">$host</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
-<p><strong>验证栅栏是否通过：</strong></p>
+<p>验证栅栏有没有过：</p>
 <ul>
-<li>不带 <code>Origin</code> curl → 200</li>
-<li>带 <code>Origin: http://&lt;public&gt;</code> curl → 403（栅栏拦了）</li>
-<li>修复后 → 400 “body is not JSON”（栅栏过了，400 只是 RPC 层校验合成 body，正常）</li>
+<li>不带 <code>Origin</code> curl，200</li>
+<li>带 <code>Origin: http://&lt;public&gt;</code> curl，403（栅栏拦了）</li>
+<li>修复后，400 “body is not JSON”（栅栏过了，400 只是 RPC 层在校验合成 body，正常）</li>
 </ul>
-<h3 id="3-隐形坑：bind-mount-的-inode-陈旧"><a href="#3-隐形坑：bind-mount-的-inode-陈旧" class="headerlink" title="3. 隐形坑：bind mount 的 inode 陈旧"></a>3. 隐形坑：bind mount 的 inode 陈旧</h3><p>改了 <code>nginx.conf</code> 却没生效？因为<strong>覆盖写入</strong> bind-mounted 文件时，容器里挂的还是<strong>旧 inode</strong> —— 你改的是宿主机新文件，容器看的是旧文件。</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 宿主机 vs 容器内文件大小不一致 → 就是 inode 问题</span></span><br><span class="line">docker restart dsh-proxy   <span class="comment"># 重新解析挂载</span></span><br></pre></td></tr></table></figure>
+<h3 id="bind-mount-的-inode-陈旧"><a href="#bind-mount-的-inode-陈旧" class="headerlink" title="bind mount 的 inode 陈旧"></a>bind mount 的 inode 陈旧</h3><p>改了 <code>nginx.conf</code> 却没生效？因为覆盖写入 bind-mounted 文件时，容器里挂的还是旧 inode，你改的是宿主机新文件，容器看的是旧文件。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 宿主机 vs 容器内文件大小不一致，就是 inode 问题</span></span><br><span class="line">docker restart dsh-proxy   <span class="comment"># 重新解析挂载</span></span><br></pre></td></tr></table></figure>
 
-<p><strong>教训：</strong> 改 bind mount 的配置后，<code>docker restart</code> 对应容器，并<strong>在容器内</strong> <code>grep</code>&#x2F;<code>wc -c</code> 验证，别只看宿主机。</p>
-<h3 id="4-配置-provider（in-container）"><a href="#4-配置-provider（in-container）" class="headerlink" title="4. 配置 provider（in-container）"></a>4. 配置 provider（in-container）</h3><p>dsh 的配置在容器内：</p>
+<p>改 bind mount 的配置后，<code>docker restart</code> 对应容器，再在容器内 grep &#x2F; wc -c 验证，别只看宿主机。</p>
+<h3 id="配置-provider（in-container）"><a href="#配置-provider（in-container）" class="headerlink" title="配置 provider（in-container）"></a>配置 provider（in-container）</h3><p>dsh 的配置在容器内：</p>
 <ul>
-<li><code>/root/.dsh/settings.yaml</code> —— provider + 默认模型</li>
-<li><code>/root/.dsh/.credentials.yaml</code> —— 实际的 API key 值</li>
+<li><code>/root/.dsh/settings.yaml</code>，provider + 默认模型</li>
+<li><code>/root/.dsh/.credentials.yaml</code>，实际的 API key 值</li>
 </ul>
 <figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># /root/.dsh/settings.yaml（节选）</span></span><br><span class="line"><span class="attr">providers:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">qwen3827b</span></span><br><span class="line">    <span class="attr">displayName:</span> <span class="string">Huihui-Qwen3.8-27B-abliterated</span></span><br><span class="line">    <span class="attr">api:</span> <span class="string">openai-completions</span></span><br><span class="line">    <span class="attr">baseURL:</span> <span class="string">http://192.168.x.x:1234/v1</span></span><br><span class="line">    <span class="attr">apiKeyEnv:</span> <span class="string">QWEN3827B_API_KEY</span></span><br><span class="line">    <span class="attr">models:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="attr">id:</span> <span class="string">qwen3.8-27b</span></span><br><span class="line">        <span class="attr">contextWindow:</span> <span class="number">65000</span></span><br><span class="line"><span class="attr">agent-default-model:</span></span><br><span class="line">  <span class="attr">provider:</span> <span class="string">qwen3827b</span></span><br><span class="line">  <span class="attr">model:</span> <span class="string">qwen3.8-27b</span></span><br></pre></td></tr></table></figure>
 
 <figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># /root/.dsh/.credentials.yaml</span></span><br><span class="line"><span class="attr">QWEN3827B_API_KEY:</span> [<span class="string">REDACTED</span>]</span><br></pre></td></tr></table></figure>
 
-<p>注意：本地 llama.cpp 的 <code>apiKey</code> 其实可以随便填（它不校验），但 dsh 要求这个字段非空，所以给个占位值即可。</p>
-<h3 id="5-前端小坑：crypto-randomUUID-polyfill"><a href="#5-前端小坑：crypto-randomUUID-polyfill" class="headerlink" title="5. 前端小坑：crypto.randomUUID polyfill"></a>5. 前端小坑：crypto.randomUUID polyfill</h3><p>dsh 的前端用到了 <code>crypto.randomUUID</code>，某些环境下缺失。需要往 <code>dsh-web-frontend/dist/index.html</code> 注入一个 polyfill，并用一个标记（如 <code>DSH_UUID_PATCH</code>）标注，方便更新后 grep 验证是否还在：</p>
+<p>本地 llama.cpp 的 apiKey 其实可以随便填（它不校验），但 dsh 要求这个字段非空，给个占位值就行。</p>
+<h3 id="前端小坑：crypto-randomUUID"><a href="#前端小坑：crypto-randomUUID" class="headerlink" title="前端小坑：crypto.randomUUID"></a>前端小坑：crypto.randomUUID</h3><p>dsh 前端用到了 <code>crypto.randomUUID</code>，某些环境下缺失。要往 <code>dsh-web-frontend/dist/index.html</code> 注入一个 polyfill，并用一个标记（比如 <code>DSH_UUID_PATCH</code>）标注，方便更新后 grep 验证还在不在：</p>
 <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">docker <span class="built_in">exec</span> dsh grep -c DSH_UUID_PATCH \</span><br><span class="line">  /usr/local/lib/node_modules/@deepseek-ai/dsh/dsh-web-frontend/dist/index.html</span><br><span class="line"><span class="comment"># 期望 ≥ 1</span></span><br></pre></td></tr></table></figure>
 
-<h3 id="6-验证清单（全过才算成功）"><a href="#6-验证清单（全过才算成功）" class="headerlink" title="6. 验证清单（全过才算成功）"></a>6. 验证清单（全过才算成功）</h3><ol>
-<li><code>docker ps</code> —— 两个容器都 Up，<code>docker inspect</code> 看 0 重启</li>
-<li><code>curl</code> 对外端口 → HTTP 200</li>
+<h3 id="验证清单（全过才算成功）"><a href="#验证清单（全过才算成功）" class="headerlink" title="验证清单（全过才算成功）"></a>验证清单（全过才算成功）</h3><ol>
+<li><code>docker ps</code>，两个容器都 Up，<code>docker inspect</code> 看 0 重启</li>
+<li><code>curl</code> 对外端口，HTTP 200</li>
 <li>模型后端：<code>curl http://192.168.x.x:1234/v1/models</code></li>
-<li>polyfill：容器内 grep <code>DSH_UUID_PATCH</code> → ≥1</li>
-<li><strong>端到端证据</strong>：<code>/root/.dsh/storages/session_projcache.json</code> 里有 session 的 <code>sessionStats</code>（turns&#x2F;steps&#x2F;decodeTokens&#x2F;llmMs）—— 这是真实调用过的铁证</li>
-<li><code>docker logs dsh | grep -iE &#39;error|warn|fail&#39;</code> → 无异常</li>
+<li>polyfill：容器内 grep <code>DSH_UUID_PATCH</code>，≥1</li>
+<li>端到端证据：<code>/root/.dsh/storages/session_projcache.json</code> 里有 session 的 <code>sessionStats</code>（turns&#x2F;steps&#x2F;decodeTokens&#x2F;llmMs），真实调用过的铁证</li>
+<li><code>docker logs dsh | grep -iE &#39;error|warn|fail&#39;</code>，无异常</li>
 </ol>
-<p>一个真实的 session 证据（脱敏）：<code>turns=3, steps=9, llmMs=54836, decodeTokens=1387</code> —— 模型确实在被调用，不是空转。</p>
-<blockquote>
-<p><strong>踩坑备注：</strong> dsh 的推理档位只接受 <code>xhigh</code>（默认）&#x2F; <code>medium</code> &#x2F; <code>low</code>，写 <code>high</code> 会报 Jinja 错 <code>Unexpected reasoning effort high</code>。浏览器自动化工具（Browserbase）对 dsh UI 时好时坏，<strong>curl + SSH 是最可靠的验证路径</strong>。</p>
-</blockquote>
-<h2 id="🔐-三、Cloudflare-安全公网（Tunnel-Access）"><a href="#🔐-三、Cloudflare-安全公网（Tunnel-Access）" class="headerlink" title="🔐 三、Cloudflare 安全公网（Tunnel + Access）"></a>🔐 三、Cloudflare 安全公网（Tunnel + Access）</h2><p>dsh 跑在 <code>192.168.x.x:3080</code>，局域网内访问没问题。但它是 <strong>Agent</strong> —— 谁能进 UI，谁就能读工作区文件、跑工具。开到公网，<strong>别裸开端口</strong>，前面挂一层真正的登录墙。</p>
+<p>一个真实 session 证据（脱敏）：<code>turns=3, steps=9, llmMs=54836, decodeTokens=1387</code>，模型确实在被调用，不是空转。</p>
+<p>备注：dsh 的推理档位只接受 <code>xhigh</code>（默认）&#x2F; <code>medium</code> &#x2F; <code>low</code>，写 <code>high</code> 会报 Jinja 错 <code>Unexpected reasoning effort high</code>。浏览器自动化工具对 dsh UI 时好时坏，curl + SSH 是最可靠的验证路径。</p>
+<h2 id="三、Cloudflare-安全公网（Tunnel-Access）"><a href="#三、Cloudflare-安全公网（Tunnel-Access）" class="headerlink" title="三、Cloudflare 安全公网（Tunnel + Access）"></a>三、Cloudflare 安全公网（Tunnel + Access）</h2><p>dsh 跑在 <code>192.168.x.x:3080</code>，局域网内访问没问题。但它是 Agent，谁能进 UI，谁就能读工作区文件、跑工具。开到公网，别裸开端口，前面挂一层真正的登录墙。</p>
 <h3 id="架构"><a href="#架构" class="headerlink" title="架构"></a>架构</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">浏览器 ──HTTPS──&gt; Cloudflare 边缘 ──加密隧道──&gt; cloudflared(token 模式, 仅出向)</span><br><span class="line">                                                        │</span><br><span class="line">                                          CF Access 应用（登录墙）</span><br><span class="line">                                          未认证 → 302 跳 CF 登录页</span><br><span class="line">                                                        │</span><br><span class="line">                                                        ▼</span><br><span class="line">                                              nginx:3080 ──&gt; dsh:3081</span><br></pre></td></tr></table></figure>
 
-<p><strong>分层防御：</strong></p>
+<p>分层：</p>
 <ol>
-<li><strong>Cloudflare Access 应用（真正的防护）</strong> —— 一个子域（如 <code>dsh.elric.top</code>）指向 <code>http://192.168.x.x:3080</code>。未认证请求先被 302 到 CF 登录页，根本到不了 nginx。认证方式可选 <strong>OIDC</strong>（推荐）或 <strong>Email OTP</strong>（一次性验证码，零配置）。</li>
-<li><strong>边缘 TLS + 隧道通道</strong> —— CF 在边缘终结 TLS，隧道是<strong>加密出向通道</strong>，路由器上不用开任何入站端口（契合”国内运营商爱扫 80&#x2F;443”的顾虑）。</li>
-<li><strong>既有层仍生效</strong> —— 浏览器信任 403 栅栏 + LLM 后端 <code>192.168.x.x:1234</code> 保持仅局域网。</li>
-<li><strong>可选加固</strong> —— CF 限流；子域起个不那么显眼的名字（想靠隐蔽就别叫 <code>dsh.</code>）；token 最小权限、可随时吊销。</li>
+<li>Cloudflare Access 应用（真正的防护）。一个子域（比如 <code>dsh.elric.top</code>）指向 <code>http://192.168.x.x:3080</code>。未认证请求先被 302 到 CF 登录页，根本到不了 nginx。认证用 OIDC（推荐）或 Email OTP（一次性验证码，零配置）。</li>
+<li>边缘 TLS + 隧道通道。CF 在边缘终结 TLS，隧道是加密出向通道，路由器上不用开任何入站端口（契合”国内运营商爱扫 80&#x2F;443”的顾虑）。</li>
+<li>既有层仍生效。浏览器信任 403 栅栏还在，LLM 后端 <code>192.168.x.x:1234</code> 保持仅局域网。</li>
+<li>可选加固。CF 限流；子域起个不那么显眼的名字（想靠隐蔽就别叫 <code>dsh.</code>）；token 最小权限、可随时吊销。</li>
 </ol>
 <h3 id="创建-Access-应用（Zero-Trust-控制台）"><a href="#创建-Access-应用（Zero-Trust-控制台）" class="headerlink" title="创建 Access 应用（Zero Trust 控制台）"></a>创建 Access 应用（Zero Trust 控制台）</h3><ol>
-<li><strong>Applications → Add an application → Type: Self-hosted</strong><ul>
+<li>Applications → Add an application → Type: Self-hosted<ul>
 <li>Application domain: <code>dsh.elric.top</code></li>
 <li>Service address: <code>http://192.168.x.x:3080</code></li>
 </ul>
 </li>
-<li><strong>Access policies → Add a policy</strong><ul>
-<li>认证：<strong>One-time PIN (Email)</strong>（零配置起步）或 OIDC</li>
+<li>Access policies → Add a policy<ul>
+<li>认证：One-time PIN (Email)（零配置起步）或 OIDC</li>
 <li>Include：你的邮箱</li>
 </ul>
 </li>
 <li>可选：MFA、IP 白名单、受信设备</li>
-<li>后续可加 <strong>Service Token</strong>，让 CLI&#x2F;API 免浏览器自动登录</li>
+<li>后续可加 Service Token，让 CLI&#x2F;API 免浏览器自动登录</li>
 </ol>
-<blockquote>
-<p><strong>CN 控制台小提示：</strong> 中文界面下模板选择器没有现成的 “Edit Cloudflare Access” 模板。用<strong>自定义令牌</strong>，权限框按<strong>英文</strong>标识搜索（<code>Access</code> &#x2F; <code>Tunnel</code> &#x2F; <code>DNS</code>），等 ~1s 异步下拉。权限给 Edit，作用域限定到<strong>具体 zone <code>elric.top</code></strong>（别选 All resources），TTL 设 <code>0</code>。</p>
-</blockquote>
+<p>CN 控制台小提示：中文界面下模板选择器没有现成的 “Edit Cloudflare Access” 模板。用自定义令牌，权限框按英文标识搜索（Access &#x2F; Tunnel &#x2F; DNS），等约 1s 异步下拉。权限给 Edit，作用域限定到具体 zone <code>elric.top</code>（别选 All resources），TTL 设 0。</p>
 <h3 id="端到端验证"><a href="#端到端验证" class="headerlink" title="端到端验证"></a>端到端验证</h3><ol>
-<li><code>curl -sL -o /dev/null -w &#39;%{http_code}\n&#39; https://dsh.elric.top</code> → 未认证请求应得到 <strong>CF Access 登录跳转</strong>（而不是 dsh UI）</li>
-<li>完成认证（OIDC &#x2F; OTP）→ dsh UI 加载</li>
-<li>确认登录页是 <strong>Cloudflare 的</strong>，不是应用的 —— 证明墙在 nginx 前面</li>
+<li><code>curl -sL -o /dev/null -w &#39;%{http_code}\n&#39; https://dsh.elric.top</code>，未认证请求应得到 CF Access 登录跳转（而不是 dsh UI）</li>
+<li>完成认证（OIDC &#x2F; OTP），dsh UI 加载</li>
+<li>确认登录页是 Cloudflare 的，不是应用的，证明墙在 nginx 前面</li>
 </ol>
-<h2 id="📝-总结"><a href="#📝-总结" class="headerlink" title="📝 总结"></a>📝 总结</h2><ul>
-<li><strong>模型升级零成本</strong>：OpenAI 兼容 API 让模型层独立迭代，换文件 + 改 alias 就完事。</li>
-<li><strong>dsh 接入的核心坑</strong>：loopback-only 绑定要 nginx 代理；403 信任栅栏要重写 <code>Host</code>+<code>Origin</code>；bind mount 改配置要 <code>docker restart</code> + 容器内验证。</li>
-<li><strong>公网安全</strong>：别裸开端口，Cloudflare Tunnel（仅出向）+ Access 登录墙，分层防御，LLM 后端永远留在局域网。</li>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><ul>
+<li>模型升级零成本：OpenAI 兼容 API 让模型层独立迭代，换文件 + 改 alias 就完事。</li>
+<li>dsh 接入的核心问题：loopback-only 绑定要 nginx 代理，403 信任栅栏要重写 Host + Origin，bind mount 改配置要 docker restart 加容器内验证。</li>
+<li>公网安全：别裸开端口，Cloudflare Tunnel（仅出向）加 Access 登录墙，分层防御，LLM 后端留在局域网。</li>
 </ul>
-<p>这套组合打下来，本地大模型 + Agent 编排 + 安全公网就是一条完整可复用的链路。</p>
+<p>这套组合打下来，本地大模型、Agent 编排、安全公网就齐了，基本能直接照抄。</p>
 <hr>
-<p><em>本文环境：ai-server 上 llama.cpp 提供 <code>qwen3.8-27b</code>（Q4_K_M，64K ctx，16.8GB）；dsh 为 <code>0.1.0-rc</code> 开发者预览版，接口可能变动。内网 IP 已脱敏为 <code>192.168.x.x</code>。</em></p>
+<p><em>本文环境：ai-server 上 llama.cpp 提供 <code>qwen3.8-27b</code>（Q4_K_M，64K ctx，16.8GB）；dsh 为 <code>0.1.0-rc</code> 开发者预览版，接口可能变动。</em></p>
 
     </div>
 
@@ -378,7 +371,6 @@
 
     <footer class="post-footer">
           <div class="post-tags">
-              <a href="/tags/%E8%B8%A9%E5%9D%91/" rel="tag"># 踩坑</a>
               <a href="/tags/%E5%A4%A7%E6%A8%A1%E5%9E%8B/" rel="tag"># 大模型</a>
               <a href="/tags/llama-cpp/" rel="tag"># llama.cpp</a>
               <a href="/tags/DeepSeek-Harness/" rel="tag"># DeepSeek Harness</a>
